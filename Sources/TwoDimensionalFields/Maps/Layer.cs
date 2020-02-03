@@ -6,9 +6,9 @@ using TwoDimensionalFields.Searching;
 
 namespace TwoDimensionalFields.Maps
 {
-    public class Layer : ILayer, IDrawable, ISearchable<IMapObject>
+    public class Layer : ILayer, IDrawable, ISearchable<MapObject>
     {
-        public List<IMapObject> Objects = new List<IMapObject>();
+        public readonly List<MapObject> Objects = new List<MapObject>();
 
         public Layer(string name)
         {
@@ -26,7 +26,7 @@ namespace TwoDimensionalFields.Maps
 
         public bool Visible { get; set; }
 
-        public void Add(IMapObject obj)
+        public void Add(MapObject obj)
         {
             Objects.Add(obj);
         }
@@ -62,7 +62,7 @@ namespace TwoDimensionalFields.Maps
             Objects.RemoveAt(index);
         }
 
-        public void Remove(IMapObject item)
+        public void Remove(MapObject item)
         {
             Objects.Remove(item);
         }
@@ -72,7 +72,7 @@ namespace TwoDimensionalFields.Maps
             Objects.Clear();
         }
 
-        public IMapObject Search(ISearcher<IMapObject> searcher)
+        public MapObject Search(ISearcher<MapObject> searcher)
         {
             return searcher.Search(this);
         }

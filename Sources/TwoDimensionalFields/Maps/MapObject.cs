@@ -1,10 +1,10 @@
 ﻿using System;
 using TwoDimensionalFields.Drawing;
-using TwoDimensionalFields.Maps;
+using TwoDimensionalFields.Searching;
 
-namespace TwoDimensionalFields.MapObjects
+namespace TwoDimensionalFields.Maps
 {
-    public abstract class MapObject : IMapObject, IDrawable
+    public abstract class MapObject : IMapObject, IDrawable, ISearchable<MapObject>
     {
         protected Bounds bounds;
         protected MapObjectType objectType;
@@ -51,6 +51,11 @@ namespace TwoDimensionalFields.MapObjects
         public MapObjectType ObjectType
         {
             get { return objectType; }
+        }
+
+        public MapObject Search(ISearcher<MapObject> searcher)
+        {
+            return searcher.Search(this);
         }
 
         public bool Selected { get; set; }

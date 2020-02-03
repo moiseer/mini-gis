@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using TwoDimensionalFields.MapObjects;
+using TwoDimensionalFields.Maps;
 using Point = TwoDimensionalFields.MapObjects.Point;
 
 namespace TwoDimensionalFields.Parsers

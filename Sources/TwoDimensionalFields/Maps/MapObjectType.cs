@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TwoDimensionalFields.MapObjects
+namespace TwoDimensionalFields.Maps
 {
     public enum MapObjectType
     {

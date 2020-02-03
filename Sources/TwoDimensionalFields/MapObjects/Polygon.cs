@@ -1,4 +1,5 @@
 ﻿using System;
+using TwoDimensionalFields.Maps;
 
 namespace TwoDimensionalFields.MapObjects
 {

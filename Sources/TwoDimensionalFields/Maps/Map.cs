@@ -6,7 +6,7 @@ using TwoDimensionalFields.Searching;
 
 namespace TwoDimensionalFields.Maps
 {
-    public class Map : IMap, IDrawable, IMapObject, ISearchable<IMapObject>
+    public class Map : IMap, IDrawable, IMapObject, ISearchable<MapObject>
     {
         private readonly double maxMapScale = 1000;
 
@@ -60,11 +60,11 @@ namespace TwoDimensionalFields.Maps
             Layers.Clear();
         }
 
-        public IMapObject Search(ISearcher<IMapObject> searcher)
+        public MapObject Search(ISearcher<MapObject> searcher)
         {
             for (int i = Layers.Count - 1; i >= 0; i--)
             {
-                if (!(Layers[i] is ISearchable<IMapObject> searchable))
+                if (!(Layers[i] is ISearchable<MapObject> searchable))
                 {
                     continue;
                 }
