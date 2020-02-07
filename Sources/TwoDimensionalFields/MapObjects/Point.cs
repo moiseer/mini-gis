@@ -8,16 +8,14 @@ namespace TwoDimensionalFields.MapObjects
     /// </summary>
     public class Point : MapObject
     {
-        private readonly (double X, double Y) position;
-
         public Point(double x, double y) : this()
         {
-            position = (x, y);
+            Position = new Node<double>(x, y);
         }
 
-        public Point((double X, double Y) vertex) : this()
+        public Point(Node<double> position) : this()
         {
-            position = vertex;
+            Position = position;
         }
 
         private Point()
@@ -25,24 +23,21 @@ namespace TwoDimensionalFields.MapObjects
             objectType = MapObjectType.Point;
         }
 
+        public Node<double> Position { get; }
+
         public double X
         {
-            get { return position.X; }
+            get { return Position.X; }
         }
 
         public double Y
         {
-            get { return position.Y; }
+            get { return Position.Y; }
         }
 
         protected override Bounds GetBounds()
         {
-            return bounds = new Bounds(position.X, position.Y, position.X, position.Y);
+            return bounds = new Bounds(Position.X, Position.Y, Position.X, Position.Y);
         }
-
-        /*internal override bool IsIntersectsWithQuad(Vertex searchPoint, double d)
-        {
-            return false;
-        }*/
     }
 }

@@ -165,9 +165,7 @@
             this.mapControl.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.mapControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mapControl.Location = new System.Drawing.Point(164, 25);
-            this.mapControl.MapScale = 1D;
             this.mapControl.Name = "mapControl";
-            this.mapControl.SelectionColor = System.Drawing.Color.Blue;
             this.mapControl.Size = new System.Drawing.Size(460, 394);
             this.mapControl.TabIndex = 0;
             this.mapControl.MouseMove += new System.Windows.Forms.MouseEventHandler(this.map_MouseMove);

@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
+using TwoDimensionalFields.Drawing;
+using TwoDimensionalFields.Drawing.Styling;
 using TwoDimensionalFields.MapObjects;
 using TwoDimensionalFields.Maps;
 using Point = TwoDimensionalFields.MapObjects.Point;
@@ -15,7 +17,7 @@ namespace TwoDimensionalFields.Parsers
         public MifParser(string layerFilename)
         {
             Version = 300;
-            Charset = "";
+            Charset = string.Empty;
             Delimiter = '\t';
             Unique = new List<int>();
             Index = new List<int>();
@@ -27,7 +29,7 @@ namespace TwoDimensionalFields.Parsers
                 while (!sr.EndOfStream)
                 {
                     var tmp = sr.ReadLine()?.Trim();
-                    var line = tmp?.Split(' ');
+                    string[] line = tmp?.Split(' ');
                     switch (line?[0])
                     {
                         case "Version":
@@ -61,7 +63,6 @@ namespace TwoDimensionalFields.Parsers
 
         public string Charset { get; set; }
         public List<Column> Columns { get; set; }
-
         public int ColumnsN { get; set; }
         public List<MapObject> Data { get; set; }
         public char Delimiter { get; set; }
@@ -78,24 +79,22 @@ namespace TwoDimensionalFields.Parsers
             return Color.FromArgb(red, green, blue);
         }
 
-        private static Color IntToColor(int alpha, int dec)
-        {
-            var red = (byte)((dec >> 16) & 0xff);
-            var green = (byte)((dec >> 8) & 0xff);
-            var blue = (byte)(dec & 0xff);
-            return Color.FromArgb(alpha, red, green, blue);
-        }
-
         private static void SetSymbol(string[] line, ref Point point)
         {
-            // string fontFamily = "MapInfo Symbols";
-            // int symbolByte = Convert.ToInt32(line[0].Substring(1, line[0].Length - 1)) + 1;
-            // Color color = IntToColor(Convert.ToInt32(line[1]));
-            // int symbolSize = Convert.ToInt32(line[2].Substring(0, line[2].Length - 1));
-            // point.Symbol.Font = new Font(fontFamily, symbolSize);
-            // point.Symbol.Number = symbolByte;
-            // point.Brush = new SolidBrush(color);
-            // point.UseOwnStyle = true;
+            var fontFamily = "MapInfo Symbols";
+            var symbolByte = Convert.ToInt32(line[0].Substring(1, line[0].Length - 1)) + 1;
+            var color = IntToColor(Convert.ToInt32(line[1]));
+            var symbolSize = Convert.ToInt32(line[2].Substring(0, line[2].Length - 1));
+            var style = new Style
+            {
+                Brush = new SolidBrush(color),
+                Symbol = new Symbol
+                {
+                    Font = new Font(fontFamily, symbolSize),
+                    Char = (char)symbolByte
+                }
+            };
+            point.Style = style;
         }
 
         private void AddLine(StreamReader sr, ref string tmp, ref string[] line)
@@ -119,8 +118,11 @@ namespace TwoDimensionalFields.Parsers
                 {
                     tmp = tmp?.Replace(" ", string.Empty).Replace(line[0], string.Empty);
                     line = tmp?.Split(',');
-                    //newline.Pen = GetPen(line[0].Substring(1, line[0].Length - 1), line[1], line[2].Substring(0, line[2].Length - 1));
-                    //newline.UseOwnStyle = true;
+                    var style = new Style
+                    {
+                        Pen = GetPen(line[0].Substring(1, line[0].Length - 1), line[1], line[2].Substring(0, line[2].Length - 1))
+                    };
+                    newline.Style = style;
                     if (!sr.EndOfStream)
                     {
                         tmp = sr.ReadLine()?.Trim();
@@ -131,8 +133,11 @@ namespace TwoDimensionalFields.Parsers
             {
                 tmp = tmp.Replace(" ", string.Empty).Replace(line[0] + line[1] + line[2] + line[3] + line[4] + line[5], string.Empty);
                 line = tmp.Split(',');
-                //newline.Pen = GetPen(line[0].Substring(1, line[0].Length - 1), line[1], line[2].Substring(0, line[2].Length - 1));
-                //newline.UseOwnStyle = true;
+                var style = new Style
+                {
+                    Pen = GetPen(line[0].Substring(1, line[0].Length - 1), line[1], line[2].Substring(0, line[2].Length - 1))
+                };
+                newline.Style = style;
                 if (!sr.EndOfStream)
                 {
                     tmp = sr.ReadLine()?.Trim();
@@ -179,8 +184,11 @@ namespace TwoDimensionalFields.Parsers
             {
                 tmp = tmp?.Replace(" ", string.Empty).Replace(line[0], string.Empty);
                 line = tmp?.Split(',');
-                //polyline.Pen = GetPen(line[0].Substring(1, line[0].Length - 1), line[1], line[2].Substring(0, line[2].Length - 1));
-                //polyline.UseOwnStyle = true;
+                var style = new Style
+                {
+                    Pen = GetPen(line[0].Substring(1, line[0].Length - 1), line[1], line[2].Substring(0, line[2].Length - 1))
+                };
+                polyline.Style = style;
                 if (!sr.EndOfStream)
                 {
                     tmp = sr.ReadLine()?.Trim();
@@ -266,16 +274,20 @@ namespace TwoDimensionalFields.Parsers
             }
 
             line = tmp?.Split(' ');
-            // Pen pen = new Pen(Color.Black);
-            // Brush brush = new SolidBrush(Color.Black);
-            // bool useOwnPen = false;
-            // bool useOwnBrush = false;
+            var style = new Style
+            {
+                Pen = new Pen(Color.Black),
+                Brush = new SolidBrush(Color.Black)
+            };
+            var hasOwnStyle = false;
             if (line?[0] == "Pen")
             {
                 tmp = tmp?.Replace(" ", string.Empty).Replace(line[0], string.Empty);
                 line = tmp?.Split(',');
-                // pen = GetPen(line?[0].Substring(1, line[0].Length - 1), line?[1], line?[2].Substring(0, line[2].Length - 1));
-                // useOwnPen = true;
+
+                style.Pen = GetPen(line?[0].Substring(1, line[0].Length - 1), line?[1], line?[2].Substring(0, line[2].Length - 1));
+                hasOwnStyle = true;
+
                 if (!sr.EndOfStream)
                 {
                     tmp = sr.ReadLine()?.Trim();
@@ -287,11 +299,18 @@ namespace TwoDimensionalFields.Parsers
             {
                 tmp = tmp?.Replace(" ", string.Empty).Replace(line[0], string.Empty);
                 line = tmp?.Split(',');
-                // if (line != null && line.Length==3)
-                //     brush = GetBrush(line[0].Substring(1, line[0].Length - 1), line[1], line[2].Substring(0, line[2].Length - 1));
-                // if (line != null && line.Length == 2)
-                //     brush = GetBrush(line[0].Substring(1, line[0].Length - 1), line[1].Substring(0, line[1].Length - 1));
-                // useOwnBrush = true;
+
+                if (line != null && line.Length == 3)
+                {
+                    style.Brush = GetBrush(line[0].Substring(1, line[0].Length - 1), line[1], line[2].Substring(0, line[2].Length - 1));
+                }
+
+                if (line != null && line.Length == 2)
+                {
+                    style.Brush = GetBrush(line[0].Substring(1, line[0].Length - 1), line[1].Substring(0, line[1].Length - 1));
+                }
+
+                hasOwnStyle = true;
                 if (!sr.EndOfStream)
                 {
                     tmp = sr.ReadLine()?.Trim();
@@ -301,9 +320,11 @@ namespace TwoDimensionalFields.Parsers
             // Добавление полигонов в основной список и задание стилей 
             foreach (var polygon in polygonsList)
             {
-                //if (useOwnPen) polygon.Pen = pen;
-                //if (useOwnBrush) polygon.Brush = brush;
-                //if (useOwnPen || useOwnBrush) polygon.UseOwnStyle = true;
+                if (hasOwnStyle)
+                {
+                    polygon.Style = style;
+                }
+
                 Data.Add(polygon);
             }
         }
@@ -492,7 +513,7 @@ namespace TwoDimensionalFields.Parsers
             Columns = new List<Column>(ColumnsN);
             for (int i = 0; i < ColumnsN; ++i)
             {
-                var lineC = sr.ReadLine()?.Trim().Split(' ');
+                string[] lineC = sr.ReadLine()?.Trim().Split(' ');
                 Columns.Add(new Column(lineC?[0], tmp.Replace($"{lineC?[0]} ", string.Empty)));
             }
         }
@@ -502,7 +523,7 @@ namespace TwoDimensionalFields.Parsers
             var tmp = sr.ReadLine()?.Trim(' ');
             while (!sr.EndOfStream)
             {
-                var line = tmp?.Split(' ');
+                string[] line = tmp?.Split(' ');
                 switch (line?[0])
                 {
                     case "Point":
@@ -537,7 +558,7 @@ namespace TwoDimensionalFields.Parsers
         private void SetIndex(string tmp)
         {
             tmp = tmp.Replace(" ", string.Empty).Replace("Index", string.Empty);
-            var indexStr = tmp.Split(',');
+            string[] indexStr = tmp.Split(',');
             foreach (var number in indexStr)
             {
                 Index.Add(Convert.ToInt32(number));
@@ -547,7 +568,7 @@ namespace TwoDimensionalFields.Parsers
         private void SetTransform(string tmp)
         {
             tmp = tmp.Replace(" ", string.Empty).Replace("Transform", string.Empty);
-            var transformStr = tmp.Split(',');
+            string[] transformStr = tmp.Split(',');
             foreach (var number in transformStr)
             {
                 Transform.Add(Convert.ToInt32(number));
@@ -557,7 +578,7 @@ namespace TwoDimensionalFields.Parsers
         private void SetUnique(string tmp)
         {
             tmp = tmp.Replace(" ", string.Empty).Replace("Unique", string.Empty);
-            var uniqueStr = tmp.Split(',');
+            string[] uniqueStr = tmp.Split(',');
             for (int i = 0; i < uniqueStr.Length; ++i)
             {
                 Unique[i] = Convert.ToInt32(uniqueStr[i]);

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using TwoDimensionalFields.MapObjects;
 
 namespace TwoDimensionalFields.Maps
 {
     public interface IMap
     {
+        Node<double> Center { get; set; }
         List<ILayer> Layers { get; }
-        (double X, double Y) MapCenter { get; set; }
-        double MapScale { get; set; }
+        double Scale { get; set; }
     }
 }

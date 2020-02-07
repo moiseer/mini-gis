@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using TwoDimensionalFields.Drawing;
+using TwoDimensionalFields.MapObjects;
 using TwoDimensionalFields.Searching;
 
 namespace TwoDimensionalFields.Maps
@@ -10,25 +11,25 @@ namespace TwoDimensionalFields.Maps
     {
         private readonly double maxMapScale = 1000;
 
-        private double mapScale = 1;
+        private double scale = 1;
 
         public Bounds Bounds
         {
             get { return CalcBounds(); }
         }
 
+        public Node<double> Center { get; set; } = new Node<double>(0, 0);
+
         public List<ILayer> Layers { get; } = new List<ILayer>();
 
-        public (double X, double Y) MapCenter { get; set; } = (0, 0);
-
-        public double MapScale
+        public double Scale
         {
-            get { return mapScale; }
+            get { return scale; }
             set
             {
-                if (mapScale < maxMapScale || value < mapScale)
+                if (scale < maxMapScale || value < scale)
                 {
-                    mapScale = value;
+                    scale = value;
                 }
             }
         }
@@ -43,6 +44,11 @@ namespace TwoDimensionalFields.Maps
         public void Draw(IDrawer drawer)
         {
             drawer.Draw(this);
+        }
+
+        public void Insert(int index, ILayer layer)
+        {
+            Layers.Insert(index, layer);
         }
 
         public void Remove(int index)

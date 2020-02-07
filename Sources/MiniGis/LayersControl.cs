@@ -24,7 +24,7 @@ namespace MiniGis
 
         private void listView_ItemChecked(object sender, ItemCheckedEventArgs e)
         {
-            if (!(e.Item.Tag is Layer layer))
+            if (!(e.Item.Tag is ILayer layer))
             {
                 return;
             }
@@ -51,8 +51,10 @@ namespace MiniGis
             }))
             {
                 listView.Items.Insert(0, listViewItem);
-                var tmpLayer = (Layer)listViewItem.Tag;
-                tmpLayer.Visible = listViewItem.Checked;
+                if (listViewItem.Tag is ILayer tmpLayer)
+                {
+                    tmpLayer.Visible = listViewItem.Checked;
+                }
             }
             
             CheckButtons();
@@ -72,7 +74,7 @@ namespace MiniGis
             
             foreach (ListViewItem item in listView.SelectedItems)
             {
-                if (item.Tag is Layer layer)
+                if (item.Tag is ILayer layer)
                 {
                     MapControl.RemoveLayer(layer);
                 }
@@ -146,13 +148,13 @@ namespace MiniGis
             ButtonDown.Enabled = listView.SelectedItems.Count == 1 && listView.SelectedItems[0].Index < listView.Items.Count - 1;
         }
 
-        public List<Layer> GetSelectedLayers()
+        public List<ILayer> GetSelectedLayers()
         {
-            var layers = new List<Layer>();
+            var layers = new List<ILayer>();
             if (listView.SelectedItems.Count == 0) return layers;
             foreach (ListViewItem item in listView.SelectedItems)
             {
-                if (item.Tag is Layer layer)
+                if (item.Tag is ILayer layer)
                 {
                     layers.Add(layer);
                 }
@@ -162,15 +164,10 @@ namespace MiniGis
 
         private void listView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            if (e.Item.Tag is Layer layer)
+            if (e.Item.Tag is ILayer layer)
             {
                 layer.Selected = e.IsSelected;
             }
-        }
-
-        private void UpdateButton_Click(object sender, EventArgs e)
-        {
-            UpdateLayers();
         }
     }
 }

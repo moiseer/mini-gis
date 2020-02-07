@@ -2,26 +2,29 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using TwoDimensionalFields.Drawing.Styling;
 using TwoDimensionalFields.Grids;
 using TwoDimensionalFields.MapObjects;
 using TwoDimensionalFields.Maps;
 using Point = TwoDimensionalFields.MapObjects.Point;
-using ScreenPoint = System.Drawing.Point;
 
 namespace TwoDimensionalFields.Drawing
 {
     public class GraphicsDrawer : IDrawer
     {
-        private readonly Brush brush = new SolidBrush(Color.Gray);
-
         private readonly double centerX;
         private readonly double centerY;
+        private readonly Style defaultStyle = Style.CreateDefault();
         private readonly Graphics graphics;
         private readonly double height;
-        private readonly Pen pen = new Pen(Color.Black, 1);
-
-        private readonly Symbol pointSymbol = new Symbol();
         private readonly double scale;
+
+        private readonly Style selectionStyle = new Style
+        {
+            Pen = new Pen(Color.Blue, 2),
+            Brush = new SolidBrush(Color.DodgerBlue)
+        };
+
         private readonly double width;
 
         public GraphicsDrawer(Graphics graphics, double centerX, double centerY, double scale, double width, double height)
@@ -86,6 +89,8 @@ namespace TwoDimensionalFields.Drawing
             var begin = MapToScreen(line.Begin.X, line.Begin.Y);
             var end = MapToScreen(line.End.X, line.End.Y);
 
+            var pen = GetPen(line);
+
             graphics.DrawLine(pen, begin, end);
         }
 
@@ -102,7 +107,10 @@ namespace TwoDimensionalFields.Drawing
 
         private void DrawPoint(Point point)
         {
-            graphics.DrawString(pointSymbol.Char.ToString(), pointSymbol.Font, brush, MapToScreen(point.X, point.Y), pointSymbol.Format);
+            var brush = GetBrush(point);
+            var symbol = GetSymbol(point);
+
+            graphics.DrawString(symbol.Char.ToString(), symbol.Font, brush, MapToScreen(point.X, point.Y), symbol.Format);
         }
 
         private void DrawPolygon(Polygon polygon)
@@ -112,9 +120,12 @@ namespace TwoDimensionalFields.Drawing
                 return;
             }
 
-            ScreenPoint[] points = polygon.Nodes
+            System.Drawing.Point[] points = polygon.Nodes
                 .Select(node => MapToScreen(node.X, node.Y))
                 .ToArray();
+
+            var pen = GetPen(polygon);
+            var brush = GetBrush(polygon);
 
             graphics.FillPolygon(brush, points.ToArray());
             graphics.DrawPolygon(pen, points.ToArray());
@@ -127,26 +138,60 @@ namespace TwoDimensionalFields.Drawing
                 return;
             }
 
-            ScreenPoint[] points = polyline.Nodes
+            System.Drawing.Point[] points = polyline.Nodes
                 .Select(node => MapToScreen(node.X, node.Y))
                 .ToArray();
+
+            var pen = GetPen(polyline);
 
             graphics.DrawLines(pen, points);
         }
 
         private void DrawSquareGrid(SquareGrid grid)
         {
-            double[,] matrix = grid.Grid;
-            for (int i = 0; i < matrix.GetLength(0); i++)
+            if (!grid.Visible)
             {
-                for (int j = 0; j < matrix.GetLength(1); j++)
+                return;
+            }
+
+            for (int i = 0; i < grid.Grid.GetLength(0); i++)
+            {
+                for (int j = 0; j < grid.Grid.GetLength(1); j++)
                 {
-                    throw new NotImplementedException();
+                    var x = grid.Position.X + i * grid.Edge;
+                    var y = grid.Position.Y - j * grid.Edge;
+                    var point = new Point(x, y);
+
+                    DrawPoint(point);
+
+                    var drawFont = new Font("Arial", 10);
+                    var brush = GetBrush(point);
+
+                    graphics.DrawString($"{grid.Grid[i, j]: 0.00}", drawFont, brush, MapToScreen(x, y));
                 }
             }
         }
 
-        private ScreenPoint MapToScreen(double x, double y)
+        private Brush GetBrush(MapObject mapObject)
+        {
+            return mapObject.Selected ? selectionStyle.Brush :
+                mapObject.HasOwnStyle ? mapObject.Style?.Brush ?? defaultStyle.Brush :
+                defaultStyle.Brush;
+        }
+
+        private Pen GetPen(MapObject mapObject)
+        {
+            return mapObject.Selected ? selectionStyle.Pen :
+                mapObject.HasOwnStyle ? mapObject.Style?.Pen ?? defaultStyle.Pen :
+                defaultStyle.Pen;
+        }
+
+        private Symbol GetSymbol(MapObject mapObject)
+        {
+            return mapObject.HasOwnStyle ? mapObject.Style?.Symbol ?? defaultStyle.Symbol : defaultStyle.Symbol;
+        }
+
+        private System.Drawing.Point MapToScreen(double x, double y)
         {
             return new System.Drawing.Point
             {

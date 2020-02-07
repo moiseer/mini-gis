@@ -11,29 +11,16 @@ namespace TwoDimensionalFields.MapObjects
             objectType = MapObjectType.PolyLine;
         }
 
-        public List<(double X, double Y)> Nodes { get; } = new List<(double X, double Y)>();
+        public List<Node<double>> Nodes { get; } = new List<Node<double>>();
 
-        public void AddNode((double X, double Y) node)
+        public void AddNode(Node<double> node)
         {
             Nodes.Add(node);
         }
 
         public void AddNode(double x, double y)
         {
-            Nodes.Add((x, y));
-        }
-
-        public Bounds CalcBounds()
-        {
-            var tempBounds1 = new Bounds();
-            var tempBounds2 = new Bounds();
-            foreach (var (x, y) in Nodes)
-            {
-                tempBounds2.SetBounds(x, y, x, y);
-                tempBounds1 += tempBounds2;
-            }
-
-            return tempBounds1;
+            Nodes.Add(new Node<double>(x, y));
         }
 
         public void RemoveAllNode()
@@ -46,7 +33,7 @@ namespace TwoDimensionalFields.MapObjects
             Nodes.RemoveAt(index);
         }
 
-        public void RemoveNode((double X, double Y) item)
+        public void RemoveNode(Node<double> item)
         {
             Nodes.Remove(item);
         }
@@ -56,14 +43,17 @@ namespace TwoDimensionalFields.MapObjects
             return bounds = CalcBounds();
         }
 
-        /*internal override bool IsIntersectsWithQuad(Vertex searchPoint, double d)
+        private Bounds CalcBounds()
         {
-            if (nodes.Count == 0) return false;
-            if (nodes.Count == 1) return IsSegmentIntersectsWithQuad(nodes[0], nodes[0], searchPoint, d);
-            for (int x = 0; x < nodes.Count - 1; x++)
-                if (IsSegmentIntersectsWithQuad(nodes[x], nodes[x + 1], searchPoint, d))
-                    return true;
-            return false;
-        }*/
+            var tempBounds1 = new Bounds();
+            var tempBounds2 = new Bounds();
+            foreach (var (x, y) in Nodes)
+            {
+                tempBounds2.SetBounds(x, y, x, y);
+                tempBounds1 += tempBounds2;
+            }
+
+            return tempBounds1;
+        }
     }
 }

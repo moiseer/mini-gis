@@ -3,40 +3,43 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using System.Windows.Forms;
-using System.Runtime.InteropServices;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using TwoDimensionalFields.Drawing;
 using TwoDimensionalFields.MapObjects;
 using TwoDimensionalFields.Maps;
+using TwoDimensionalFields.Searching;
+using Point = System.Drawing.Point;
 
 namespace MiniGis
 {
     public partial class MapControl : UserControl
     {
-        private const string HandCur = @"Resources\hand.cur";
-        private const string ZoomInCur = @"Resources\zoom-in.cur";
-        private const string ZoomOutCur = @"Resources\zoom-out.cur";
-        private const string MoveCur =@"Resources\dnd-move.cur";
-        
-        public List<Layer> Layers { get; } = new List<Layer>();
-        private readonly int snap = 3;
-        public Color SelectionColor { get; set; } = Color.Blue;
-        private double mapScale = 1;
-        public double MapScale
+        private const string HandCurPath = @"Resources\hand.cur";
+        private const string MoveCurPath = @"Resources\dnd-move.cur";
+        private const string ZoomInCurPath = @"Resources\zoom-in.cur";
+        private const string ZoomOutCurPath = @"Resources\zoom-out.cur";
+
+        private readonly Map map = new Map();
+
+        private readonly int snap = 5;
+        private MapToolType activeTool;
+
+        private Cursor handCur;
+        private bool isMouseDown;
+        private Point mouseDownPosition;
+        private Cursor moveCur;
+        private Cursor zoomInCur;
+        private Cursor zoomOutCur;
+
+        public MapControl()
         {
-            get { return mapScale; }
-            set
-            {
-                if ((mapScale < 1000) || (value < mapScale))
-                    mapScale = value;
-                Invalidate();
-            }
+            InitializeComponent();
+            MouseWheel += Map_MouseWheel;
+            LoadCursors();
         }
 
-        private bool isMouseDown;
-        private System.Drawing.Point mouseDownPosition;
-        private MapToolType activeTool;
         public MapToolType ActiveTool
         {
             get { return activeTool; }
@@ -49,17 +52,143 @@ namespace MiniGis
                         Cursor = Cursors.Arrow;
                         break;
                     case MapToolType.Pan:
-                        Cursor = LoadCustomCursor(HandCur);
+                        Cursor = handCur;
                         break;
                     case MapToolType.ZoomIn:
-                        Cursor = LoadCustomCursor(ZoomInCur);
+                        Cursor = zoomInCur;
                         break;
                     case MapToolType.ZoomOut:
-                        Cursor = LoadCustomCursor(ZoomOutCur);
+                        Cursor = zoomOutCur;
                         break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             }
         }
+
+        public List<ILayer> Layers
+        {
+            get { return map.Layers; }
+        }
+
+        public List<MapObject> SelectedObjects { get; } = new List<MapObject>();
+
+        public void AddLayer(ILayer layer)
+        {
+            map.Layers.Add(layer);
+        }
+
+        public void MoveLayerDown(ILayer layer)
+        {
+            if (!map.Layers.Contains(layer))
+            {
+                return;
+            }
+
+            if (layer == map.Layers.First())
+            {
+                return;
+            }
+
+            var index = map.Layers.IndexOf(layer);
+            RemoveLayer(layer);
+            InsertLayer(index - 1, layer);
+
+            Invalidate();
+        }
+
+        public void MoveLayerUp(ILayer layer)
+        {
+            if (!map.Layers.Contains(layer))
+            {
+                return;
+            }
+
+            if (layer == map.Layers.Last())
+            {
+                return;
+            }
+
+            var index = map.Layers.IndexOf(layer);
+            RemoveLayer(layer);
+            InsertLayer(index + 1, layer);
+
+            Invalidate();
+        }
+
+        public void RemoveAllLayer()
+        {
+            map.Layers.Clear();
+        }
+
+        public void RemoveLayer(int index)
+        {
+            map.Layers.RemoveAt(index);
+        }
+
+        public void RemoveLayer(ILayer layer)
+        {
+            map.Layers.Remove(layer);
+        }
+
+        public Node<double> ScreenToMap(Point screenPoint)
+        {
+            var x = (screenPoint.X - Width / 2) / map.Scale + map.Center.X;
+            var y = -(screenPoint.Y - Height / 2) / map.Scale + map.Center.Y;
+
+            return new Node<double>(x, y);
+        }
+
+        public void ZoomAll()
+        {
+            var bounds = CalcBounds();
+            if (!bounds.Valid)
+            {
+                return;
+            }
+
+            var w = (bounds.XMax - bounds.XMin) * map.Scale;
+            var h = (bounds.YMax - bounds.YMin) * map.Scale;
+
+            map.Center = new Node<double>((bounds.XMin + bounds.XMax) / 2, (bounds.YMin + bounds.YMax) / 2);
+
+            if (!(w <= snap || h <= snap))
+            {
+                map.Scale *= Math.Min(Width / w, Height / h);
+            }
+
+            Invalidate();
+        }
+
+        public void ZoomLayers(List<ILayer> layers)
+        {
+            if (layers == null || layers.Count == 0)
+            {
+                return;
+            }
+
+            var bounds = layers.Aggregate(new Bounds(), (current, layer) => current + layer.Bounds);
+
+            if (!bounds.Valid)
+            {
+                return;
+            }
+
+            var w = (bounds.XMax - bounds.XMin) * map.Scale;
+            var h = (bounds.YMax - bounds.YMin) * map.Scale;
+
+            map.Center = new Node<double>((bounds.XMin + bounds.XMax) / 2, (bounds.YMin + bounds.YMax) / 2);
+
+            if (Math.Abs(w) > 0.001 && Math.Abs(h) > 0.001)
+            {
+                map.Scale *= Math.Min(Width / w, Height / h);
+            }
+
+            Invalidate();
+        }
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        private static extern IntPtr LoadCursorFromFile(string path);
 
         private static Cursor LoadCustomCursor(string path)
         {
@@ -68,145 +197,115 @@ namespace MiniGis
             {
                 throw new Win32Exception();
             }
+
             var curs = new Cursor(hCurs);
-            
+
             var fi = typeof(Cursor).GetField("ownHandle", BindingFlags.NonPublic | BindingFlags.Instance);
             fi?.SetValue(curs, true);
             return curs;
         }
 
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        private static extern IntPtr LoadCursorFromFile(string path);
-
-        public MapControl()
+        private Bounds CalcBounds()
         {
-            InitializeComponent();
-            MouseWheel += Map_MouseWheel;
-        }
-
-        public Node<double> Center { get; set; } = new Node<double>(0, 0);
-
-        public new Bounds Bounds
-        {
-            get
-            {
-                return CalcBounds();
-            }
-        }
-
-        public List<MapObject> SelectedObjects { get; } = new List<MapObject>();
-
-        public Bounds CalcBounds()
-        {
-            return Layers
+            return map.Layers
                 .Where(layer => layer.Visible)
                 .Aggregate(new Bounds(), (current, layer) => current + layer.Bounds);
         }
 
-        public void AddLayer(Layer layer)
+        private void ClearSelection()
         {
-            Layers.Add(layer);
-        }
-
-        public void RemoveLayer(int index)
-        {
-            Layers.RemoveAt(index);
-        }
-
-        public void RemoveLayer(Layer layer)
-        {
-            Layers.Remove(layer);
-        }
-
-        public void RemoveAllLayer()
-        {
-            Layers.Clear();
-        }
-
-        private void Map_Paint(object sender, PaintEventArgs e)
-        {
-            var drawer = new GraphicsDrawer(e.Graphics, Center.X, Center.Y, MapScale, Width, Height);
-            foreach (var layer in Layers.Where(layer => layer.Visible))
+            foreach (var obj in SelectedObjects)
             {
-                layer.Draw(drawer);
+                obj.Selected = false;
             }
+
+            SelectedObjects.Clear();
         }
 
-        public System.Drawing.Point MapToScreen(Node<double> mapPoint)
+        private void InsertLayer(int index, ILayer layer)
         {
-
-            var x = (int) ((mapPoint.X - Center.X) * MapScale + Width / 2.0);
-            var y = (int) (-(mapPoint.Y - Center.Y) * MapScale + Height / 2.0);
-            
-            return new System.Drawing.Point(x, y);
+            map.Layers.Insert(index, layer);
         }
 
-        public Node<double> ScreenToMap(System.Drawing.Point screenPoint)
+        private void LoadCursors()
         {
-            var x = (screenPoint.X - Width / 2) / MapScale + Center.X;
-            var y = -(screenPoint.Y - Height / 2) / MapScale + Center.Y;
-         
-            return new Node<double>(x, y);
-        }
-
-        private void Map_Resize(object sender, EventArgs e)
-        {
-            Invalidate();
+            handCur = LoadCustomCursor(HandCurPath);
+            moveCur = LoadCustomCursor(MoveCurPath);
+            zoomInCur = LoadCustomCursor(ZoomInCurPath);
+            zoomOutCur = LoadCustomCursor(ZoomOutCurPath);
         }
 
         private void Map_MouseDown(object sender, MouseEventArgs e)
         {
             isMouseDown = true;
             mouseDownPosition = e.Location;
-            
+
             switch (ActiveTool)
             {
                 case MapToolType.Select:
                     break;
                 case MapToolType.Pan:
-                    Cursor = LoadCustomCursor(MoveCur);
+                    Cursor = moveCur;
                     break;
                 case MapToolType.ZoomIn:
                     break;
                 case MapToolType.ZoomOut:
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
         private void Map_MouseMove(object sender, MouseEventArgs e)
         {
+            if (!isMouseDown)
+            {
+                return;
+            }
+
             switch (ActiveTool)
             {
                 case MapToolType.Select:
                     break;
                 case MapToolType.Pan:
-                    if (!isMouseDown) return;
-                    var dX = (e.X - mouseDownPosition.X) / MapScale;
-                    var dY = (e.Y - mouseDownPosition.Y) / MapScale;
-                    Center.X -= dX;
-                    Center.Y += dY;
+                    var dX = (e.X - mouseDownPosition.X) / map.Scale;
+                    var dY = (e.Y - mouseDownPosition.Y) / map.Scale;
+
+                    map.Center.X -= dX;
+                    map.Center.Y += dY;
+
                     Invalidate();
+
                     mouseDownPosition = e.Location;
+
                     break;
                 case MapToolType.ZoomIn:
-                    if (!isMouseDown) return;
-                    var topLeft = new System.Drawing.Point
+                    var topLeft = new Point
                     {
                         X = mouseDownPosition.X < e.X ? mouseDownPosition.X : e.X,
                         Y = mouseDownPosition.Y < e.Y ? mouseDownPosition.Y : e.Y
                     };
-                    var bottomRight = new System.Drawing.Point
+
+                    var bottomRight = new Point
                     {
                         X = mouseDownPosition.X > e.X ? mouseDownPosition.X : e.X,
                         Y = mouseDownPosition.Y > e.Y ? mouseDownPosition.Y : e.Y
                     };
+
                     var g = CreateGraphics();
-                    g.DrawRectangle(new Pen(Color.Blue, 2), topLeft.X, topLeft.Y,
-                    bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y);
+                    g.DrawRectangle(new Pen(Color.Blue, 2),
+                        topLeft.X,
+                        topLeft.Y,
+                        bottomRight.X - topLeft.X,
+                        bottomRight.Y - topLeft.Y);
+
                     Invalidate();
+
                     break;
                 case MapToolType.ZoomOut:
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -219,151 +318,100 @@ namespace MiniGis
                     var dx = Math.Abs(mouseDownPosition.X - e.X);
                     var dy = Math.Abs(mouseDownPosition.Y - e.Y);
 
-                    if (dx > snap && dy > snap) break;
-                    var searchPoint = ScreenToMap(e.Location);
-                    var d = snap / MapScale;
+                    if (dx > snap && dy > snap)
+                    {
+                        break;
+                    }
+
+                    Node<double> searchPoint = ScreenToMap(e.Location);
+                    var delta = snap / map.Scale;
 
                     if (ModifierKeys != Keys.Control)
                     {
                         ClearSelection();
                         Invalidate();
                     }
-                    var result = FindObject(searchPoint, d);
 
-                    if (result == null) break;
+                    var result = map.Search(new MapObjectSearcher(searchPoint, delta));
+
+                    if (result == null)
+                    {
+                        break;
+                    }
+
                     result.Selected = true;
-                    if(!SelectedObjects.Contains(result))
+                    if (!SelectedObjects.Contains(result))
+                    {
                         SelectedObjects.Add(result);
+                    }
 
                     Invalidate();
                     break;
                 case MapToolType.Pan:
-                    Cursor = LoadCustomCursor(HandCur);
+                    Cursor = handCur;
                     break;
                 case MapToolType.ZoomIn:
                     var x = (mouseDownPosition.X + e.X) / 2;
                     var y = (mouseDownPosition.Y + e.Y) / 2;
-                    Center = ScreenToMap(new System.Drawing.Point(x, y));
+                    map.Center = ScreenToMap(new Point(x, y));
 
                     var w = Math.Abs(mouseDownPosition.X - e.X);
                     var h = Math.Abs(mouseDownPosition.Y - e.Y);
 
-                    if (w <= snap && h <= snap) MapScale *= 1.5;
-                    if (w <= snap && h > snap) MapScale *= (double) Height / h;
-                    if (w > snap && h <= snap) MapScale *= (double) Width / w;
-                    if (w > snap && h > snap) MapScale *= Math.Min(Width / w, Height / h);
+                    if (w <= snap && h <= snap)
+                    {
+                        map.Scale *= 1.5;
+                    }
+
+                    if (w <= snap && h > snap)
+                    {
+                        map.Scale *= (double)Height / h;
+                    }
+
+                    if (w > snap && h <= snap)
+                    {
+                        map.Scale *= (double)Width / w;
+                    }
+
+                    if (w > snap && h > snap)
+                    {
+                        map.Scale *= Math.Min(Width / w, Height / h);
+                    }
 
                     Invalidate();
                     break;
                 case MapToolType.ZoomOut:
-                    MapScale /= 1.5;
+                    map.Scale /= 1.5;
+                    Invalidate();
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-        }
-
-        public MapObject FindObject(Node<double> searchPoint, double d)
-        {
-            MapObject result = null;
-            /*for (int i = Layers.Count - 1; i >= 0; i--)
-            {
-                MapObject searchObj = Layers[i].FindObject(searchPoint, d);
-                if (searchObj != null)
-                {
-                    result = searchObj;
-                    break;
-                }
-            }*/
-            return result;
         }
 
         private void Map_MouseWheel(object sender, MouseEventArgs e)
         {
             if (e.Delta > 0)
-                MapScale *= 2;
+            {
+                map.Scale *= 2;
+            }
             else
-                MapScale /= 2;
-        }
+            {
+                map.Scale /= 2;
+            }
 
-        public void ZoomAll()
-        {
-            if (!Bounds.Valid) return;
-            var w = (Bounds.XMax - Bounds.XMin) * MapScale;
-            var h = (Bounds.YMax - Bounds.YMin) * MapScale;
-            Center = new Node<double>((Bounds.XMin + Bounds.XMax) / 2, (Bounds.YMin + Bounds.YMax) / 2);
-            if (!(w <= snap || h <= snap))
-                mapScale *= Math.Min(Width / w, Height / h);
             Invalidate();
         }
 
-        public void ZoomLayers(List<Layer> layers)
+        private void Map_Paint(object sender, PaintEventArgs e)
         {
-            if (layers == null || layers.Count == 0)
-            {
-                return;
-            }
-            
-            var bounds = layers.Aggregate(new Bounds(), (current, layer) => current + layer.Bounds);
-            
-            if (!bounds.Valid)
-            {
-                return;
-            }
-            
-            var w = (bounds.XMax - bounds.XMin) * MapScale;
-            var h = (bounds.YMax - bounds.YMin) * MapScale;
-            
-            Center = new Node<double>((bounds.XMin + bounds.XMax) / 2, (bounds.YMin + bounds.YMax) / 2);
-            
-            if (!(Math.Abs(w) < 0.001 || Math.Abs(h) < 0.001))
-                mapScale *= Math.Min(Width / w, Height / h);
-            
+            var drawer = new GraphicsDrawer(e.Graphics, map.Center.X, map.Center.Y, map.Scale, Width, Height);
+            map.Draw(drawer);
+        }
+
+        private void Map_Resize(object sender, EventArgs e)
+        {
             Invalidate();
         }
-
-        public void MoveLayerUp(Layer layer)
-        {
-            if (!Layers.Contains(layer))
-            {
-                return;
-            }
-            
-            if (layer == Layers.Last())
-            {
-                return;
-            }
-            
-            var index = Layers.IndexOf(layer);
-            Layers.Remove(layer);
-            Layers.Insert(index + 1, layer);
-            
-            Invalidate();
-        }
-        
-        public void MoveLayerDown(Layer layer)
-        {
-            if (!Layers.Contains(layer))
-            {
-                return;
-            }
-
-            if (layer == Layers.First())
-            {
-                return;
-            }
-            
-            var index = Layers.IndexOf(layer);
-            Layers.Remove(layer);
-            Layers.Insert(index - 1, layer);
-            
-            Invalidate();
-        }
-
-        public void ClearSelection()
-        {
-            foreach (var obj in SelectedObjects)
-                obj.Selected = false;
-            SelectedObjects.Clear();
-        }
-
     }
 }

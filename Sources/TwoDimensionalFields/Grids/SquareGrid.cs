@@ -1,18 +1,18 @@
 ﻿using System;
 using TwoDimensionalFields.Drawing;
+using TwoDimensionalFields.MapObjects;
 using TwoDimensionalFields.Maps;
 
 namespace TwoDimensionalFields.Grids
 {
     public class SquareGrid : IGrid, IDrawable, ILayer
     {
-        private readonly double edge;
-        private readonly double[,] matrix;
+        public double Edge { get; }
 
-        public SquareGrid(double[,] matrix, double edge)
+        public SquareGrid(double?[,] matrix, double edge)
         {
-            this.matrix = matrix;
-            this.edge = edge;
+            Grid = matrix;
+            Edge = edge;
         }
 
         public Bounds Bounds
@@ -22,58 +22,76 @@ namespace TwoDimensionalFields.Grids
                 return new Bounds(
                     Position.X,
                     Position.Y,
-                    Position.X + matrix.GetLength(0) * edge,
-                    Position.Y - matrix.GetLength(1) * edge);
+                    Position.X + Width,
+                    Position.Y - Height);
             }
         }
 
-        public double[,] Grid
+        public double?[,] Grid { get; }
+
+        public double Height
         {
-            get { return matrix; }
+            get { return (Grid.GetLength(1) - 1) * Edge; }
         }
 
         public string Name { get; set; } = "Square grid";
 
-        public (double X, double Y) Position { get; set; }
-        public bool Selected { get; set; } = false;
+        public Node<double> Position { get; set; }
+
+        public bool Selected { get; set; }
 
         public bool Visible { get; set; } = true;
+
+        public double Width
+        {
+            get { return (Grid.GetLength(0) - 1) * Edge; }
+        }
 
         public void Draw(IDrawer drawer)
         {
             drawer.Draw(this);
         }
 
-        public double GetValue(double x, double y)
+        public double? GetValue(double x, double y)
         {
-            double dx = x - Position.X;
-            double dy = Position.Y - y;
+            double i = (x - Position.X) / Edge;
+            double j = (Position.Y - y) / Edge;
 
-            return GetValueByIndex(dx / edge, dy / edge);
+            return GetValueByIndex(i, j);
         }
 
-        public double GetValueByIndex(double i, double j)
+        public double? GetValueByIndex(double i, double j)
         {
-            if (i < 0 || i >= matrix.GetLength(0) || j < 0 || j >= matrix.GetLength(1))
+            if (i < 0 || i >= Grid.GetLength(0) || j < 0 || j >= Grid.GetLength(1))
             {
-                return double.NaN;
+                return null;
             }
 
             int iMin = Convert.ToInt32(Math.Floor(i));
-            int iMai = iMin + 1;
+            int iMax = iMin + 1;
             int jMin = Convert.ToInt32(Math.Floor(j));
-            int jMai = jMin + 1;
+            int jMax = jMin + 1;
 
-            double z1 = matrix[iMin, jMai];
-            double z2 = matrix[iMai, jMai];
-            double z3 = matrix[iMai, jMin];
-            double z4 = matrix[iMin, jMin];
+            double? z1 = Grid[iMin, jMax];
+            double? z2 = Grid[iMax, jMax];
+            double? z3 = Grid[iMax, jMin];
+            double? z4 = Grid[iMin, jMin];
 
-            double z5 = (j - jMin) * (z2 - z1) + z1;
-            double z6 = (j - jMin) * (z4 - z3) + z3;
-            double value = (i - iMin) * (z6 - z5) + z5;
+            if (!z1.HasValue || !z2.HasValue || !z3.HasValue || !z4.HasValue)
+            {
+                return null;
+            }
+
+            double? z5 = (j - jMin) * (z2 - z1) + z1;
+            double? z6 = (j - jMin) * (z4 - z3) + z3;
+            double? value = (i - iMin) * (z6 - z5) + z5;
 
             return value;
         }
+
+        /*public MapObject Search(ISearcher<MapObject> searcher)
+        {
+            return searcher.Search(this);
+        }*/
     }
 }

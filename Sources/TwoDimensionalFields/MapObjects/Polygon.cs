@@ -25,32 +25,5 @@ namespace TwoDimensionalFields.MapObjects
 
             return Math.Abs(area) / 2.0;
         }
-
-        public bool IsContainPoint(double x, double y)
-        {
-            var c = false;
-            for (int i = 0, j = Nodes.Count - 1; i < Nodes.Count; j = i++)
-            {
-                if ((Nodes[i].Y <= y && y < Nodes[j].Y || Nodes[j].Y <= y && y < Nodes[i].Y) &&
-                    x > (Nodes[j].X - Nodes[i].X) * (y - Nodes[i].Y) / (Nodes[j].Y - Nodes[i].Y) + Nodes[i].X)
-                {
-                    c = !c;
-                }
-            }
-
-            return c;
-        }
-
-        /*internal override bool IsIntersectsWithQuad(Vertex searchPoint, double d)
-        {
-            if (base.IsIntersectsWithQuad(searchPoint, d)) return true;
-
-            if (IsSegmentIntersectsWithQuad(Nodes.Last(), Nodes[0], searchPoint, d))
-                return true;
-
-            if (IsContainPoint(searchPoint.X, searchPoint.Y)) return true;
-
-            return false;
-        }*/
     }
 }
