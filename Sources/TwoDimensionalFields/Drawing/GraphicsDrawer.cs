@@ -12,12 +12,8 @@ namespace TwoDimensionalFields.Drawing
 {
     public class GraphicsDrawer : IDrawer
     {
-        private readonly double centerX;
-        private readonly double centerY;
         private readonly Style defaultStyle = Style.CreateDefault();
         private readonly Graphics graphics;
-        private readonly double height;
-        private readonly double scale;
 
         private readonly Style selectionStyle = new Style
         {
@@ -25,17 +21,16 @@ namespace TwoDimensionalFields.Drawing
             Brush = new SolidBrush(Color.DodgerBlue)
         };
 
-        private readonly double width;
+        private double centerX;
+        private double centerY;
+        private double height;
+        private double scale;
+        private double width;
 
-        public GraphicsDrawer(Graphics graphics, double centerX, double centerY, double scale, double width, double height)
+        public GraphicsDrawer(Graphics graphics)
         {
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
             this.graphics = graphics;
-            this.centerX = centerX;
-            this.centerY = centerY;
-            this.scale = scale;
-            this.width = width;
-            this.height = height;
         }
 
         public void Draw(IDrawable drawable)
@@ -55,7 +50,7 @@ namespace TwoDimensionalFields.Drawing
                     DrawPolyline(polyline);
                     break;
                 case SquareGrid squareGrid:
-                    DrawSquareGrid(squareGrid);
+                    DrawSquareAsBitmap(squareGrid);
                     break;
                 case Layer layer:
                     DrawLayer(layer);
@@ -64,8 +59,17 @@ namespace TwoDimensionalFields.Drawing
                     DrawMap(map);
                     break;
                 default:
-                    throw new NotImplementedException();
+                    throw new ArgumentException();
             }
+        }
+
+        public void SetParams(double centerX, double centerY, double scale, double width, double height)
+        {
+            this.centerX = centerX;
+            this.centerY = centerY;
+            this.scale = scale;
+            this.width = width;
+            this.height = height;
         }
 
         private void DrawLayer(Layer layer)
@@ -147,19 +151,33 @@ namespace TwoDimensionalFields.Drawing
             graphics.DrawLines(pen, points);
         }
 
-        private void DrawSquareGrid(SquareGrid grid)
+        private void DrawSquareAsBitmap(SquareGrid grid)
         {
             if (!grid.Visible)
             {
                 return;
             }
 
-            for (int i = 0; i < grid.Grid.GetLength(0); i++)
+            var bitmap = grid.GridBitmap.Bitmap;
+            var drawPosition = MapToScreen(grid.Position.X, grid.Position.Y);
+            var size = new Size((int) (grid.Width * scale), (int) (grid.Height * scale));
+            var drawArea = new Rectangle(drawPosition, size);
+
+            graphics.DrawImage(bitmap, drawArea);
+        }
+
+        private void DrawSquareGridAsPoints(SquareGrid grid)
+        {
+            if (!grid.Visible)
             {
-                for (int j = 0; j < grid.Grid.GetLength(1); j++)
+                return;
+            }
+
+            for (int i = 0; i < grid.RowCount; i++)
+            {
+                for (int j = 0; j < grid.ColumnCount; j++)
                 {
-                    var x = grid.Position.X + i * grid.Edge;
-                    var y = grid.Position.Y - j * grid.Edge;
+                    (double x, double y) = grid.IndexesToCoordinates(i, j);
                     var point = new Point(x, y);
 
                     DrawPoint(point);
@@ -167,7 +185,7 @@ namespace TwoDimensionalFields.Drawing
                     var drawFont = new Font("Arial", 10);
                     var brush = GetBrush(point);
 
-                    graphics.DrawString($"{grid.Grid[i, j]: 0.00}", drawFont, brush, MapToScreen(x, y));
+                    graphics.DrawString($"{grid[i, j]:0.00}", drawFont, brush, MapToScreen(x, y));
                 }
             }
         }

@@ -36,7 +36,7 @@ namespace TwoDimensionalFields.Searching
                 case IMap map:
                     return SearchMap(map);
                 default:
-                    throw new NotImplementedException();
+                    throw new ArgumentException();
             }
         }
 

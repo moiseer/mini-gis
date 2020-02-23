@@ -100,17 +100,7 @@ namespace MiniGis
 
         private void InitTestGrid()
         {
-            var matrix = new double?[,]
-            {
-                { 1, 2, 3, 2 },
-                { 2, null, 2, 3 },
-                { 3, 2, 3, 2 },
-                { 2, 3, 2, 4 },
-            };
-            var grid = new SquareGrid(matrix, 2)
-            {
-                Position = new Node<double>(2, 9)
-            };
+            var grid = SquareGridFactory.CreateTestGrid();
 
             mapControl.AddLayer(grid);
         }
@@ -187,8 +177,8 @@ namespace MiniGis
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            InitTestLayers();
-            // InitTestGrid();
+            // InitTestLayers();
+            InitTestGrid();
 
             layersControl.MapControl = mapControl;
             layersControl.AddLayer += AddLayersFromFiles;

@@ -15,7 +15,7 @@ namespace TwoDimensionalFields.Drawing
                 LineAlignment = StringAlignment.Center
             };
         }
-        
+
         public char Char { get; set; }
         public Font Font { get; set; }
         public StringFormat Format { get; set; }

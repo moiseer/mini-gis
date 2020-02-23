@@ -14,15 +14,13 @@ namespace TwoDimensionalFieldsTests
             {
                 { 1, 2, 3, 2 },
                 { 2, 1, 2, 3 },
-                { 3, 2, 3, 2 },
+                { 1, 2, 3, 2 },
                 { 2, 3, 2, 4 },
             };
-            var grid = new SquareGrid(matrix, 2)
-            {
-                Position = new Node<double>(2, 9)
-            };
+            var position = new Node<double>(2, 9);
+            var grid = new SquareGrid(matrix, position, 2);
 
-            double? zCenter = grid.GetValue(3, 8);
+            double? zCenter = grid.GetValue(3, 6);
 
             Assert.Equal(1.5, zCenter);
         }
@@ -37,10 +35,8 @@ namespace TwoDimensionalFieldsTests
                 { 3, 2, 3, 2 },
                 { 2, 3, 2, 4 },
             };
-            var grid = new SquareGrid(matrix, 2)
-            {
-                Position = new Node<double>(2, 9)
-            };
+            var position = new Node<double>(2, 9);
+            var grid = new SquareGrid(matrix, position, 2);
 
             double? zCenter = grid.GetValue(3, 8);
 

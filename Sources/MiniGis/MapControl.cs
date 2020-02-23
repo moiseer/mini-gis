@@ -405,7 +405,9 @@ namespace MiniGis
 
         private void Map_Paint(object sender, PaintEventArgs e)
         {
-            var drawer = new GraphicsDrawer(e.Graphics, map.Center.X, map.Center.Y, map.Scale, Width, Height);
+            var drawer =  new GraphicsDrawer(e.Graphics);
+            drawer.SetParams(map.Center.X, map.Center.Y, map.Scale, Width, Height);
+
             map.Draw(drawer);
         }
 
