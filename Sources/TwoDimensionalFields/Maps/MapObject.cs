@@ -7,27 +7,18 @@ namespace TwoDimensionalFields.Maps
 {
     public abstract class MapObject : IMapObject, IDrawable, ISearchable<MapObject>, IStyled
     {
-        protected Bounds bounds;
         protected MapObjectType objectType;
+        private Bounds bounds;
         private Style style;
 
-        public virtual Bounds Bounds
-        {
-            get { return bounds ?? GetBounds(); }
-        }
-
+        public virtual Bounds Bounds => bounds ?? (bounds = GetBounds());
         public bool HasOwnStyle { get; set; }
-
-        public MapObjectType ObjectType
-        {
-            get { return objectType; }
-        }
-
+        public MapObjectType ObjectType => objectType;
         public bool Selected { get; set; }
 
         public Style Style
         {
-            get { return style; }
+            get => style;
             set
             {
                 HasOwnStyle = true;
@@ -35,16 +26,8 @@ namespace TwoDimensionalFields.Maps
             }
         }
 
-        public void Draw(IDrawer drawer)
-        {
-            drawer.Draw(this);
-        }
-
-        public MapObject Search(ISearcher<MapObject> searcher)
-        {
-            return searcher.Search(this);
-        }
-
+        public void Draw(IDrawer drawer) => drawer.Draw(this);
+        public MapObject Search(ISearcher<MapObject> searcher) => searcher.Search(this);
         protected abstract Bounds GetBounds();
     }
 }

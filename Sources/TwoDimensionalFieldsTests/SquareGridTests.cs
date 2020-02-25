@@ -38,7 +38,7 @@ namespace TwoDimensionalFieldsTests
             var position = new Node<double>(2, 9);
             var grid = new SquareGrid(matrix, position, 2);
 
-            double? zCenter = grid.GetValue(3, 8);
+            double? zCenter = grid.GetValue(3, 6);
 
             Assert.Null(zCenter);
         }

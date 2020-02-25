@@ -12,15 +12,11 @@ namespace TwoDimensionalFields.Drawing
 {
     public class GraphicsDrawer : IDrawer
     {
-        private readonly Style defaultStyle = Style.CreateDefault();
+        private readonly Style defaultStyle;
         private readonly Graphics graphics;
+        private readonly Style selectionStyle;
 
-        private readonly Style selectionStyle = new Style
-        {
-            Pen = new Pen(Color.Blue, 2),
-            Brush = new SolidBrush(Color.DodgerBlue)
-        };
-
+        private Bounds bounds;
         private double centerX;
         private double centerY;
         private double height;
@@ -31,12 +27,26 @@ namespace TwoDimensionalFields.Drawing
         {
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
             this.graphics = graphics;
+
+            defaultStyle = Style.CreateDefault();
+            selectionStyle = new Style
+            {
+                Pen = new Pen(Color.Blue, 2),
+                Brush = new SolidBrush(Color.DodgerBlue)
+            };
         }
 
         public void Draw(IDrawable drawable)
         {
             switch (drawable)
             {
+                case IMapObject mapObject when !bounds.IntersectsWith(mapObject.Bounds):
+                case ILayer layerObject when !layerObject.Visible:
+                case Polyline polylineObject when polylineObject.Nodes.Count < 2:
+                    return;
+                case ValuedPoint valuedPoint:
+                    DrawValuedPoint(valuedPoint);
+                    break;
                 case Point point:
                     DrawPoint(point);
                     break;
@@ -50,7 +60,7 @@ namespace TwoDimensionalFields.Drawing
                     DrawPolyline(polyline);
                     break;
                 case SquareGrid squareGrid:
-                    DrawSquareAsBitmap(squareGrid);
+                    DrawSquareGridAsBitmap(squareGrid);
                     break;
                 case Layer layer:
                     DrawLayer(layer);
@@ -63,22 +73,18 @@ namespace TwoDimensionalFields.Drawing
             }
         }
 
-        public void SetParams(double centerX, double centerY, double scale, double width, double height)
+        public void SetParams(double centerX, double centerY, double scale, double width, double height, Bounds bounds)
         {
             this.centerX = centerX;
             this.centerY = centerY;
             this.scale = scale;
             this.width = width;
             this.height = height;
+            this.bounds = bounds;
         }
 
         private void DrawLayer(Layer layer)
         {
-            if (!layer.Visible)
-            {
-                return;
-            }
-
             foreach (var mapObject in layer.Objects)
             {
                 if (mapObject is IDrawable drawable)
@@ -119,11 +125,6 @@ namespace TwoDimensionalFields.Drawing
 
         private void DrawPolygon(Polygon polygon)
         {
-            if (polygon.Nodes.Count < 2)
-            {
-                return;
-            }
-
             System.Drawing.Point[] points = polygon.Nodes
                 .Select(node => MapToScreen(node.X, node.Y))
                 .ToArray();
@@ -137,11 +138,6 @@ namespace TwoDimensionalFields.Drawing
 
         private void DrawPolyline(Polyline polyline)
         {
-            if (polyline.Nodes.Count < 2)
-            {
-                return;
-            }
-
             System.Drawing.Point[] points = polyline.Nodes
                 .Select(node => MapToScreen(node.X, node.Y))
                 .ToArray();
@@ -151,16 +147,11 @@ namespace TwoDimensionalFields.Drawing
             graphics.DrawLines(pen, points);
         }
 
-        private void DrawSquareAsBitmap(SquareGrid grid)
+        private void DrawSquareGridAsBitmap(SquareGrid grid)
         {
-            if (!grid.Visible)
-            {
-                return;
-            }
-
             var bitmap = grid.GridBitmap.Bitmap;
             var drawPosition = MapToScreen(grid.Position.X, grid.Position.Y);
-            var size = new Size((int) (grid.Width * scale), (int) (grid.Height * scale));
+            var size = new Size((int)(grid.Width * scale), (int)(grid.Height * scale));
             var drawArea = new Rectangle(drawPosition, size);
 
             graphics.DrawImage(bitmap, drawArea);
@@ -168,26 +159,26 @@ namespace TwoDimensionalFields.Drawing
 
         private void DrawSquareGridAsPoints(SquareGrid grid)
         {
-            if (!grid.Visible)
-            {
-                return;
-            }
-
             for (int i = 0; i < grid.RowCount; i++)
             {
                 for (int j = 0; j < grid.ColumnCount; j++)
                 {
                     (double x, double y) = grid.IndexesToCoordinates(i, j);
-                    var point = new Point(x, y);
+                    var point = new ValuedPoint(x, y, grid[i, j]);
 
-                    DrawPoint(point);
-
-                    var drawFont = new Font("Arial", 10);
-                    var brush = GetBrush(point);
-
-                    graphics.DrawString($"{grid[i, j]:0.00}", drawFont, brush, MapToScreen(x, y));
+                    Draw(point);
                 }
             }
+        }
+
+        private void DrawValuedPoint(ValuedPoint point)
+        {
+            DrawPoint(point);
+
+            var drawFont = new Font("Arial", 10);
+            var brush = new SolidBrush(Color.Black);
+
+            graphics.DrawString($"{point.Value:0.00}", drawFont, brush, MapToScreen(point.X, point.Y));
         }
 
         private Brush GetBrush(MapObject mapObject)
@@ -216,6 +207,16 @@ namespace TwoDimensionalFields.Drawing
                 X = (int)((x - centerX) * scale + width / 2 + 0.5),
                 Y = (int)(-(y - centerY) * scale + height / 2 + 0.5)
             };
+        }
+
+        private class ValuedPoint : Point
+        {
+            public ValuedPoint(double x, double y, double? value) : base(x, y)
+            {
+                Value = value;
+            }
+
+            public double? Value { get; }
         }
     }
 }

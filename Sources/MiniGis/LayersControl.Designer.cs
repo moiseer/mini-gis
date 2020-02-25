@@ -22,9 +22,9 @@
 
         #region Код, автоматически созданный конструктором компонентов
 
-        /// <summary> 
-        /// Требуемый метод для поддержки конструктора — не изменяйте 
-        /// содержимое этого метода с помощью редактора кода.
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent()
         {
@@ -45,7 +45,7 @@
             this.listView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listView.Location = new System.Drawing.Point(0, 0);
             this.listView.Name = "listView";
-            this.listView.Size = new System.Drawing.Size(292, 262);
+            this.listView.Size = new System.Drawing.Size(341, 306);
             this.listView.TabIndex = 0;
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.List;
@@ -56,15 +56,10 @@
             // toolStrip
             // 
             this.toolStrip.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.ButtonAdd,
-            this.ButtonRemove,
-            this.toolStripSeparator1,
-            this.ButtonUp,
-            this.ButtonDown});
-            this.toolStrip.Location = new System.Drawing.Point(0, 262);
+            this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.ButtonAdd, this.ButtonRemove, this.toolStripSeparator1, this.ButtonUp, this.ButtonDown });
+            this.toolStrip.Location = new System.Drawing.Point(0, 306);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(292, 25);
+            this.toolStrip.Size = new System.Drawing.Size(341, 25);
             this.toolStrip.TabIndex = 1;
             // 
             // ButtonAdd
@@ -114,17 +109,16 @@
             // 
             // LayersControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.listView);
             this.Controls.Add(this.toolStrip);
             this.Name = "LayersControl";
-            this.Size = new System.Drawing.Size(292, 287);
+            this.Size = new System.Drawing.Size(341, 331);
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion

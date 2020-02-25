@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using TwoDimensionalFields.Drawing.Styling;
@@ -36,10 +37,10 @@ namespace MiniGis
             string[] filename = openFileDialog.SafeFileNames;
             for (int i = 0; i < filePathName.Length; ++i)
             {
-                var extIndex = filename[i].IndexOf('.');
-                var layerName = filename[i].Substring(0, extIndex);
+                var layerName = Path.GetFileNameWithoutExtension(filename[i]);
                 var layer = new Layer(layerName);
                 var parser = new MifParser(filePathName[i]);
+
                 foreach (var mapObject in parser.Data)
                 {
                     layer.Add(mapObject);

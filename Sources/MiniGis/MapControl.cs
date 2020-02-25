@@ -21,11 +21,10 @@ namespace MiniGis
         private const string ZoomInCurPath = @"Resources\zoom-in.cur";
         private const string ZoomOutCurPath = @"Resources\zoom-out.cur";
 
-        private readonly Map map = new Map();
+        private readonly Map map;
+        private readonly int snap;
 
-        private readonly int snap = 5;
         private MapToolType activeTool;
-
         private Cursor handCur;
         private bool isMouseDown;
         private Point mouseDownPosition;
@@ -35,6 +34,9 @@ namespace MiniGis
 
         public MapControl()
         {
+            SelectedObjects = new List<MapObject>();
+            snap = 5;
+            map = new Map();
             InitializeComponent();
             MouseWheel += Map_MouseWheel;
             LoadCursors();
@@ -42,7 +44,7 @@ namespace MiniGis
 
         public MapToolType ActiveTool
         {
-            get { return activeTool; }
+            get => activeTool;
             set
             {
                 activeTool = value;
@@ -66,17 +68,9 @@ namespace MiniGis
             }
         }
 
-        public List<ILayer> Layers
-        {
-            get { return map.Layers; }
-        }
-
-        public List<MapObject> SelectedObjects { get; } = new List<MapObject>();
-
-        public void AddLayer(ILayer layer)
-        {
-            map.Layers.Add(layer);
-        }
+        public List<ILayer> Layers => map.Layers;
+        public List<MapObject> SelectedObjects { get; }
+        public void AddLayer(ILayer layer) => map.Layers.Add(layer);
 
         public void MoveLayerDown(ILayer layer)
         {
@@ -116,20 +110,9 @@ namespace MiniGis
             Invalidate();
         }
 
-        public void RemoveAllLayer()
-        {
-            map.Layers.Clear();
-        }
-
-        public void RemoveLayer(int index)
-        {
-            map.Layers.RemoveAt(index);
-        }
-
-        public void RemoveLayer(ILayer layer)
-        {
-            map.Layers.Remove(layer);
-        }
+        public void RemoveAllLayer() => map.Layers.Clear();
+        public void RemoveLayer(int index) => map.Layers.RemoveAt(index);
+        public void RemoveLayer(ILayer layer) => map.Layers.Remove(layer);
 
         public Node<double> ScreenToMap(Point screenPoint)
         {
@@ -152,7 +135,7 @@ namespace MiniGis
 
             map.Center = new Node<double>((bounds.XMin + bounds.XMax) / 2, (bounds.YMin + bounds.YMax) / 2);
 
-            if (!(w <= snap || h <= snap))
+            if (w > snap && h > snap)
             {
                 map.Scale *= Math.Min(Width / w, Height / h);
             }
@@ -160,9 +143,9 @@ namespace MiniGis
             Invalidate();
         }
 
-        public void ZoomLayers(List<ILayer> layers)
+        public void ZoomLayers(IEnumerable<ILayer> layers)
         {
-            if (layers == null || layers.Count == 0)
+            if (layers == null || !layers.Any())
             {
                 return;
             }
@@ -222,10 +205,7 @@ namespace MiniGis
             SelectedObjects.Clear();
         }
 
-        private void InsertLayer(int index, ILayer layer)
-        {
-            map.Layers.Insert(index, layer);
-        }
+        private void InsertLayer(int index, ILayer layer) => map.Layers.Insert(index, layer);
 
         private void LoadCursors()
         {
@@ -405,15 +385,16 @@ namespace MiniGis
 
         private void Map_Paint(object sender, PaintEventArgs e)
         {
-            var drawer =  new GraphicsDrawer(e.Graphics);
-            drawer.SetParams(map.Center.X, map.Center.Y, map.Scale, Width, Height);
+            var drawer = new GraphicsDrawer(e.Graphics);
+            (double x1, double y1) = ScreenToMap(new Point(0, 0));
+            (double x2, double y2) = ScreenToMap(new Point(Width, Height));
+            var bounds = new Bounds(x1, y1, x2, y2);
+
+            drawer.SetParams(map.Center.X, map.Center.Y, map.Scale, Width, Height, bounds);
 
             map.Draw(drawer);
         }
 
-        private void Map_Resize(object sender, EventArgs e)
-        {
-            Invalidate();
-        }
+        private void Map_Resize(object sender, EventArgs e) => Invalidate();
     }
 }

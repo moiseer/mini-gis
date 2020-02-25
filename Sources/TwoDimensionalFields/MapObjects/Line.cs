@@ -11,10 +11,9 @@ namespace TwoDimensionalFields.MapObjects
             End = end;
         }
 
-        public Line(double beginX, double beginY, double endX, double endY) : this()
+        public Line(double beginX, double beginY, double endX, double endY)
+            : this(new Node<double>(beginX, beginY), new Node<double>(endX, endY))
         {
-            Begin = new Node<double>(beginX, beginY);
-            End = new Node<double>(endX, endY);
         }
 
         private Line()
@@ -23,16 +22,16 @@ namespace TwoDimensionalFields.MapObjects
         }
 
         public Node<double> Begin { get; }
-
         public Node<double> End { get; }
 
         protected override Bounds GetBounds()
         {
-            return bounds = new Bounds(
+            return new Bounds(
                 Begin.X < End.X ? Begin.X : End.X,
                 Begin.Y > End.Y ? Begin.Y : End.Y,
                 Begin.X > End.X ? Begin.X : End.X,
-                Begin.Y < End.Y ? Begin.Y : End.Y);
+                Begin.Y < End.Y ? Begin.Y : End.Y
+            );
         }
     }
 }

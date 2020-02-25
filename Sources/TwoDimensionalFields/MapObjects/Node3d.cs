@@ -18,9 +18,6 @@ namespace TwoDimensionalFields.MapObjects
             z = Z;
         }
 
-        public override string ToString()
-        {
-            return $"{nameof(X)}: {X}, {nameof(Y)}: {Y}, {nameof(Z)}: {Z}";
-        }
+        public override string ToString() => $"{nameof(X)}: {X}, {nameof(Y)}: {Y}, {nameof(Z)}: {Z}";
     }
 }

@@ -9,22 +9,24 @@ namespace TwoDimensionalFields.Maps
 {
     public class Map : IMap, IDrawable, IMapObject, ISearchable<MapObject>
     {
-        private readonly double maxMapScale = 1000;
+        private readonly double maxMapScale;
+        private double scale;
 
-        private double scale = 1;
-
-        public Bounds Bounds
+        public Map()
         {
-            get { return CalcBounds(); }
+            maxMapScale = 1000;
+            scale = 1;
+            Center = new Node<double>(0, 0);
+            Layers = new List<ILayer>();
         }
 
-        public Node<double> Center { get; set; } = new Node<double>(0, 0);
-
-        public List<ILayer> Layers { get; } = new List<ILayer>();
+        public Bounds Bounds => CalcBounds();
+        public Node<double> Center { get; set; }
+        public List<ILayer> Layers { get; }
 
         public double Scale
         {
-            get { return scale; }
+            get => scale;
             set
             {
                 if (scale < maxMapScale || value < scale)
@@ -34,37 +36,14 @@ namespace TwoDimensionalFields.Maps
             }
         }
 
-        public bool Selected { get; set; } = false;
+        public bool Selected { get; set; }
 
-        public void Add(ILayer layer)
-        {
-            Layers.Add(layer);
-        }
-
-        public void Draw(IDrawer drawer)
-        {
-            drawer.Draw(this);
-        }
-
-        public void Insert(int index, ILayer layer)
-        {
-            Layers.Insert(index, layer);
-        }
-
-        public void Remove(int index)
-        {
-            Layers.RemoveAt(index);
-        }
-
-        public void Remove(ILayer layer)
-        {
-            Layers.Remove(layer);
-        }
-
-        public void RemoveAll()
-        {
-            Layers.Clear();
-        }
+        public void Add(ILayer layer) => Layers.Add(layer);
+        public void Draw(IDrawer drawer) => drawer.Draw(this);
+        public void Insert(int index, ILayer layer) => Layers.Insert(index, layer);
+        public void Remove(int index) => Layers.RemoveAt(index);
+        public void Remove(ILayer layer) => Layers.Remove(layer);
+        public void RemoveAll() => Layers.Clear();
 
         public MapObject Search(ISearcher<MapObject> searcher)
         {

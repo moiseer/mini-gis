@@ -8,9 +8,8 @@ namespace TwoDimensionalFields.MapObjects
     /// </summary>
     public class Point : MapObject
     {
-        public Point(double x, double y) : this()
+        public Point(double x, double y) : this(new Node<double>(x, y))
         {
-            Position = new Node<double>(x, y);
         }
 
         public Point(Node<double> position) : this()
@@ -24,20 +23,12 @@ namespace TwoDimensionalFields.MapObjects
         }
 
         public Node<double> Position { get; }
-
-        public double X
-        {
-            get { return Position.X; }
-        }
-
-        public double Y
-        {
-            get { return Position.Y; }
-        }
+        public double X => Position.X;
+        public double Y => Position.Y;
 
         protected override Bounds GetBounds()
         {
-            return bounds = new Bounds(Position.X, Position.Y, Position.X, Position.Y);
+            return new Bounds(Position.X, Position.Y, Position.X, Position.Y);
         }
     }
 }

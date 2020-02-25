@@ -11,7 +11,6 @@ namespace TwoDimensionalFields.MapObjects
         }
 
         public T X { get; set; }
-
         public T Y { get; set; }
 
         public void Deconstruct(out T x, out T y)
@@ -20,9 +19,6 @@ namespace TwoDimensionalFields.MapObjects
             y = Y;
         }
 
-        public override string ToString()
-        {
-            return $"{nameof(X)}: {X}, {nameof(Y)}: {Y}";
-        }
+        public override string ToString() => $"{nameof(X)}: {X}, {nameof(Y)}: {Y}";
     }
 }

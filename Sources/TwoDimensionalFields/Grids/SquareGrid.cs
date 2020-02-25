@@ -23,6 +23,7 @@ namespace TwoDimensionalFields.Grids
         private SquareGrid()
         {
             Visible = true;
+            Name = "Square grid";
             GridBitmap = new SquareGridBitmap(this)
             {
                 MinColor = Color.Blue,
@@ -30,14 +31,14 @@ namespace TwoDimensionalFields.Grids
             };
         }
 
-        public Bounds Bounds => bounds ?? (bounds = CalcBounds());
+        public Bounds Bounds => bounds ?? (bounds = GetBounds());
         public int ColumnCount => grid.GetLength(1);
         public double Edge { get; }
         public SquareGridBitmap GridBitmap { get; }
         public double Height => (RowCount - 1) * Edge;
-        public double? MaxValue => maxValue ?? CalcAndSetMinMaxValues().Max;
-        public double? MinValue => minValue ?? CalcAndSetMinMaxValues().Min;
-        public string Name { get; set; } = "Square grid";
+        public double? MaxValue => maxValue ?? CalcAndSetValues().Max;
+        public double? MinValue => minValue ?? CalcAndSetValues().Min;
+        public string Name { get; set; }
 
         /// <summary>
         /// Xmin, Ymax
@@ -59,10 +60,7 @@ namespace TwoDimensionalFields.Grids
             return (i, j);
         }
 
-        public void Draw(IDrawer drawer)
-        {
-            drawer.Draw(this);
-        }
+        public void Draw(IDrawer drawer) => drawer.Draw(this);
 
         public double? GetValue(double x, double y)
         {
@@ -119,7 +117,7 @@ namespace TwoDimensionalFields.Grids
             return searcher.Search(this);
         }*/
 
-        private (double? Min, double? Max) CalcAndSetMinMaxValues()
+        private (double? Min, double? Max) CalcAndSetValues()
         {
             double? min = grid[0, 0];
             double? max = grid[0, 0];
@@ -145,13 +143,14 @@ namespace TwoDimensionalFields.Grids
             return (min, max);
         }
 
-        private Bounds CalcBounds()
+        private Bounds GetBounds()
         {
             return new Bounds(
                 Position.X,
                 Position.Y,
                 Position.X + Width,
-                Position.Y - Height);
+                Position.Y - Height
+            );
         }
 
         private void ValueChanged(double? newValue)

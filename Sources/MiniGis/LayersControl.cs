@@ -8,29 +8,22 @@ namespace MiniGis
 {
     public partial class LayersControl : UserControl
     {
+        public MapControl MapControl;
+
         public LayersControl()
         {
             InitializeComponent();
         }
 
-        public MapControl MapControl;
-
-        public int SelectedItemsCount
-        {
-            get { return listView.SelectedItems.Count; }
-        }
-
         public event EventHandler AddLayer;
 
-        private void listView_ItemChecked(object sender, ItemCheckedEventArgs e)
+        public int SelectedItemsCount => listView.SelectedItems.Count;
+
+        public IEnumerable<ILayer> GetSelectedLayers()
         {
-            if (!(e.Item.Tag is ILayer layer))
-            {
-                return;
-            }
-            
-            layer.Visible = !layer.Visible;
-            MapControl.Invalidate();
+            return listView.SelectedItems.Cast<ListViewItem>()
+                .Select(item=> item.Tag as ILayer)
+                .Where(layer => layer != null);
         }
 
         public void UpdateLayers()
@@ -39,63 +32,73 @@ namespace MiniGis
             {
                 return;
             }
-            
+
             listView.Items.Clear();
-            
-            foreach (var listViewItem in MapControl.Layers.Select(layer => new ListViewItem
+
+            listView.Items.AddRange(MapControl.Layers.Select(layer => new ListViewItem
             {
-                Text = layer.Name, 
-                Checked = layer.Visible, 
-                Selected = layer.Selected, 
+                Text = layer.Name,
+                Checked = layer.Visible,
+                Selected = layer.Selected,
                 Tag = layer
-            }))
+            }).Reverse().ToArray());
+
+            foreach (ListViewItem listViewItem in listView.Items)
             {
-                listView.Items.Insert(0, listViewItem);
                 if (listViewItem.Tag is ILayer tmpLayer)
                 {
                     tmpLayer.Visible = listViewItem.Checked;
                 }
             }
-            
+
             CheckButtons();
         }
 
-        private void RemoveSelectedLayers()
+        private void buttonAdd_Click(object sender, EventArgs e) => AddLayer?.Invoke(sender, e);
+        private void buttonDown_Click(object sender, EventArgs e) => MoveSelectedLayerDown();
+        private void buttonRemove_Click(object sender, EventArgs e) => RemoveSelectedLayers();
+        private void buttonUp_Click(object sender, EventArgs e) => MoveSelectedLayerUp();
+
+        private void CheckButtons()
+        {
+            ButtonRemove.Enabled = listView.SelectedItems.Count > 0;
+            ButtonUp.Enabled = listView.SelectedItems.Count == 1 && listView.SelectedItems[0].Index > 0;
+            ButtonDown.Enabled = listView.SelectedItems.Count == 1 && listView.SelectedItems[0].Index < listView.Items.Count - 1;
+        }
+
+        private void listView_ItemChecked(object sender, ItemCheckedEventArgs e)
+        {
+            if (e.Item.Tag is ILayer layer)
+            {
+                layer.Visible = !layer.Visible;
+                MapControl.Invalidate();
+            }
+        }
+
+        private void listView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            if (e.Item.Tag is ILayer layer)
+            {
+                layer.Selected = e.IsSelected;
+            }
+        }
+
+        private void listView_SelectedIndexChanged(object sender, EventArgs e) => CheckButtons();
+
+        private void MoveSelectedLayerDown()
         {
             if (MapControl == null)
             {
                 return;
             }
-            
-            if (listView.SelectedItems.Count == 0)
+
+            if (listView.SelectedItems.Count != 1)
             {
                 return;
             }
-            
-            foreach (ListViewItem item in listView.SelectedItems)
-            {
-                if (item.Tag is ILayer layer)
-                {
-                    MapControl.RemoveLayer(layer);
-                }
-            }
-            
+
+            MapControl.MoveLayerDown(listView.SelectedItems[0].Tag as Layer);
             UpdateLayers();
-        }
-
-        private void buttonRemove_Click(object sender, EventArgs e)
-        {
-            RemoveSelectedLayers();
-        }
-
-        private void buttonAdd_Click(object sender, EventArgs e)
-        {
-            AddLayer?.Invoke(sender, e);
-        }
-
-        private void buttonUp_Click(object sender, EventArgs e)
-        {
-            MoveSelectedLayerUp();
         }
 
         private void MoveSelectedLayerUp()
@@ -109,65 +112,32 @@ namespace MiniGis
             {
                 return;
             }
-            
+
             MapControl.MoveLayerUp(listView.SelectedItems[0].Tag as Layer);
-            
             UpdateLayers();
         }
 
-        private void buttonDown_Click(object sender, EventArgs e)
-        {
-            MoveSelectedLayerDown();
-        }
-
-        private void MoveSelectedLayerDown()
+        private void RemoveSelectedLayers()
         {
             if (MapControl == null)
             {
                 return;
             }
 
-            if (listView.SelectedItems.Count != 1)
+            if (listView.SelectedItems.Count == 0)
             {
                 return;
             }
-            
-            MapControl.MoveLayerDown(listView.SelectedItems[0].Tag as Layer);
-            UpdateLayers();
-        }
 
-        private void listView_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            CheckButtons();
-        }
-
-        private void CheckButtons()
-        {
-            ButtonRemove.Enabled = listView.SelectedItems.Count > 0;
-            ButtonUp.Enabled = listView.SelectedItems.Count == 1 && listView.SelectedItems[0].Index > 0;
-            ButtonDown.Enabled = listView.SelectedItems.Count == 1 && listView.SelectedItems[0].Index < listView.Items.Count - 1;
-        }
-
-        public List<ILayer> GetSelectedLayers()
-        {
-            var layers = new List<ILayer>();
-            if (listView.SelectedItems.Count == 0) return layers;
             foreach (ListViewItem item in listView.SelectedItems)
             {
                 if (item.Tag is ILayer layer)
                 {
-                    layers.Add(layer);
+                    MapControl.RemoveLayer(layer);
                 }
             }
-            return layers;
-        }
 
-        private void listView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
-        {
-            if (e.Item.Tag is ILayer layer)
-            {
-                layer.Selected = e.IsSelected;
-            }
+            UpdateLayers();
         }
     }
 }
