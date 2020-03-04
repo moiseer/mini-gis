@@ -17,10 +17,16 @@ namespace TwoDimensionalFields.Searching
             this.delta = delta;
         }
 
+        public Bounds Bounds { get; set; }
+
         public MapObject Search(ISearchable<MapObject> searchable)
         {
             switch (searchable)
             {
+                case IMapObject mapObject when Bounds != null && !Bounds.IntersectsWith(mapObject.Bounds):
+                case ILayer layerObject when !layerObject.Visible:
+                case Polyline polylineObject when polylineObject.Nodes.Count < 2:
+                    return null;
                 case Point point:
                     return SearchPoint(point);
                 case Line line:
@@ -31,28 +37,12 @@ namespace TwoDimensionalFields.Searching
                     return SearchPolyline(polyline);
                 case Layer layer:
                     return SearchLayer(layer);
-                /*case SquareGrid squareGrid:
-                    return SearchSquareGrid(squareGrid);*/
                 case IMap map:
                     return SearchMap(map);
                 default:
                     throw new ArgumentException();
             }
         }
-
-        /*private MapObject SearchSquareGrid(SquareGrid squareGrid)
-        {
-            (double xMin, double yMax) = squareGrid.Position;
-            double xMax = xMin + squareGrid.Width;
-            double yMin = yMax - squareGrid.Height;
-
-            if(IsPointInsideArea(searchPoint, xMin, yMin, xMax, yMax))
-            {
-                return new Point(searchPoint);
-            }
-
-            return null;
-        }*/
 
         private static bool IsContainPoint(List<Node<double>> polygon, Node<double> searchPoint)
         {
@@ -74,8 +64,7 @@ namespace TwoDimensionalFields.Searching
         private static bool IsPointInsideArea(Node<double> point, double spXMin, double spYMin, double spXMax, double spYMax)
         {
             (double x, double y) = point;
-            bool beginInside = x > spXMin && y > spYMin && x < spXMax && y < spYMax;
-            return beginInside;
+            return x > spXMin && y > spYMin && x < spXMax && y < spYMax;
         }
 
         private static bool IsPointNear(Node<double> point, Node<double> searchPoint, double delta)
@@ -123,12 +112,7 @@ namespace TwoDimensionalFields.Searching
                 return true;
             }
 
-            if (IsSegmentsIntersect(begin, end, point4, point1))
-            {
-                return true;
-            }
-
-            return false;
+            return IsSegmentsIntersect(begin, end, point4, point1);
         }
 
         private static bool IsSegmentsIntersect(Node<double> beginA, Node<double> endA, Node<double> beginB, Node<double> endB)
@@ -138,29 +122,16 @@ namespace TwoDimensionalFields.Searching
             double v3 = VectorMultiplication(endA.X - beginA.X, endA.Y - beginA.Y, beginB.X - beginA.X, beginB.Y - beginA.Y);
             double v4 = VectorMultiplication(endA.X - beginA.X, endA.Y - beginA.Y, endB.X - beginA.X, endB.Y - beginA.Y);
 
-            if (v1 * v2 < 0 && v3 * v4 < 0)
-            {
-                return true;
-            }
-
-            return false;
+            return v1 * v2 < 0 && v3 * v4 < 0;
         }
 
-        private static double VectorMultiplication(double ax, double ay, double bx, double by)
-        {
-            return ax * by - bx * ay;
-        }
+        private static double VectorMultiplication(double ax, double ay, double bx, double by) => ax * by - bx * ay;
 
         private MapObject SearchLayer(Layer layer)
         {
-            if (!layer.Visible)
+            foreach (var searchable in layer.Objects.OfType<ISearchable<MapObject>>().Reverse())
             {
-                return null;
-            }
-
-            for (int i = layer.Objects.Count - 1; i >= 0; i--)
-            {
-                var mapObject = layer.Objects[i].Search(this);
+                MapObject mapObject = searchable.Search(this);
                 if (mapObject != null)
                 {
                     return mapObject;
@@ -182,15 +153,12 @@ namespace TwoDimensionalFields.Searching
 
         private MapObject SearchMap(IMap map)
         {
-            for (int i = map.Layers.Count - 1; i >= 0; i--)
+            foreach (var searchable in map.Layers.OfType<ISearchable<MapObject>>().Reverse())
             {
-                if (map.Layers[i] is ISearchable<MapObject> searchable)
+                MapObject mapObject = searchable.Search(this);
+                if (mapObject != null)
                 {
-                    MapObject mapObject = searchable.Search(this);
-                    if (mapObject != null)
-                    {
-                        return mapObject;
-                    }
+                    return mapObject;
                 }
             }
 
@@ -230,16 +198,6 @@ namespace TwoDimensionalFields.Searching
 
         private MapObject SearchPolyline(Polyline polyline)
         {
-            if (polyline.Nodes.Count == 0)
-            {
-                return null;
-            }
-
-            if (polyline.Nodes.Count == 1 && IsPointNear(polyline.Nodes.First(), searchPoint, delta))
-            {
-                return polyline;
-            }
-
             for (int x = 0; x < polyline.Nodes.Count - 1; x++)
             {
                 if (IsSegmentIntersectsWithQuad(polyline.Nodes[x], polyline.Nodes[x + 1], searchPoint, delta))

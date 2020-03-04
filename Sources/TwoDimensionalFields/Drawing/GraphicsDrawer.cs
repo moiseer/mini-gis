@@ -44,7 +44,7 @@ namespace TwoDimensionalFields.Drawing
                 case ILayer layerObject when !layerObject.Visible:
                 case Polyline polylineObject when polylineObject.Nodes.Count < 2:
                     return;
-                case ValuedPoint valuedPoint:
+                case IrregularGridGraphics.ValuedPoint valuedPoint:
                     DrawValuedPoint(valuedPoint);
                     break;
                 case Point point:
@@ -59,8 +59,11 @@ namespace TwoDimensionalFields.Drawing
                 case Polyline polyline:
                     DrawPolyline(polyline);
                     break;
-                case SquareGrid squareGrid:
-                    DrawSquareGridAsBitmap(squareGrid);
+                case RegularGrid regularGrid:
+                    DrawRegularGrid(regularGrid);
+                    break;
+                case IrregularGrid irregularGrid:
+                    DrawIrregularGrid(irregularGrid);
                     break;
                 case Layer layer:
                     DrawLayer(layer);
@@ -81,6 +84,14 @@ namespace TwoDimensionalFields.Drawing
             this.width = width;
             this.height = height;
             this.bounds = bounds;
+        }
+
+        private void DrawIrregularGrid(IrregularGrid grid)
+        {
+            foreach (Point point in grid.GridGraphics.ColoredPoints)
+            {
+                Draw(point);
+            }
         }
 
         private void DrawLayer(Layer layer)
@@ -132,8 +143,8 @@ namespace TwoDimensionalFields.Drawing
             var pen = GetPen(polygon);
             var brush = GetBrush(polygon);
 
-            graphics.FillPolygon(brush, points.ToArray());
-            graphics.DrawPolygon(pen, points.ToArray());
+            graphics.FillPolygon(brush, points);
+            graphics.DrawPolygon(pen, points);
         }
 
         private void DrawPolyline(Polyline polyline)
@@ -147,7 +158,7 @@ namespace TwoDimensionalFields.Drawing
             graphics.DrawLines(pen, points);
         }
 
-        private void DrawSquareGridAsBitmap(SquareGrid grid)
+        private void DrawRegularGrid(RegularGrid grid)
         {
             var bitmap = grid.GridBitmap.Bitmap;
             var drawPosition = MapToScreen(grid.Position.X, grid.Position.Y);
@@ -157,28 +168,18 @@ namespace TwoDimensionalFields.Drawing
             graphics.DrawImage(bitmap, drawArea);
         }
 
-        private void DrawSquareGridAsPoints(SquareGrid grid)
+        private void DrawValuedPoint(IrregularGridGraphics.ValuedPoint point)
         {
-            for (int i = 0; i < grid.RowCount; i++)
-            {
-                for (int j = 0; j < grid.ColumnCount; j++)
-                {
-                    (double x, double y) = grid.IndexesToCoordinates(i, j);
-                    var point = new ValuedPoint(x, y, grid[i, j]);
+            var brush = GetBrush(point);
+            var symbol = GetSymbol(point);
 
-                    Draw(point);
-                }
-            }
-        }
+            var textFont = new Font("Arial", 10);
+            var textBrush = new SolidBrush(Color.Black);
 
-        private void DrawValuedPoint(ValuedPoint point)
-        {
-            DrawPoint(point);
+            var screenPoint = MapToScreen(point.X, point.Y);
 
-            var drawFont = new Font("Arial", 10);
-            var brush = new SolidBrush(Color.Black);
-
-            graphics.DrawString($"{point.Value:0.00}", drawFont, brush, MapToScreen(point.X, point.Y));
+            graphics.DrawString(symbol.Char.ToString(), symbol.Font, brush, screenPoint, symbol.Format);
+            graphics.DrawString($"{point.Value:0.00}", textFont, textBrush, screenPoint);
         }
 
         private Brush GetBrush(MapObject mapObject)
@@ -207,16 +208,6 @@ namespace TwoDimensionalFields.Drawing
                 X = (int)((x - centerX) * scale + width / 2 + 0.5),
                 Y = (int)(-(y - centerY) * scale + height / 2 + 0.5)
             };
-        }
-
-        private class ValuedPoint : Point
-        {
-            public ValuedPoint(double x, double y, double? value) : base(x, y)
-            {
-                Value = value;
-            }
-
-            public double? Value { get; }
         }
     }
 }

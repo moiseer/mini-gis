@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using TwoDimensionalFields.Drawing;
 using TwoDimensionalFields.MapObjects;
@@ -6,35 +7,31 @@ using TwoDimensionalFields.Maps;
 
 namespace TwoDimensionalFields.Grids
 {
-    public class SquareGrid : IGrid, IDrawable, ILayer
+    public class RegularGrid : IGrid, IDrawable, ILayer
     {
         private readonly double?[,] grid;
         private Bounds bounds;
         private double? maxValue;
         private double? minValue;
 
-        public SquareGrid(double?[,] matrix, Node<double> position, double edge) : this()
+        public RegularGrid(double?[,] matrix, Node<double> position, double edge) : this()
         {
             grid = matrix;
             Edge = edge;
             Position = position;
         }
 
-        private SquareGrid()
+        private RegularGrid()
         {
             Visible = true;
-            Name = "Square grid";
-            GridBitmap = new SquareGridBitmap(this)
-            {
-                MinColor = Color.Blue,
-                MaxColor = Color.Red
-            };
+            Name = "Regular grid";
+            GridBitmap = new RegularGridBitmap(this);
         }
 
         public Bounds Bounds => bounds ?? (bounds = GetBounds());
         public int ColumnCount => grid.GetLength(1);
         public double Edge { get; }
-        public SquareGridBitmap GridBitmap { get; }
+        public RegularGridBitmap GridBitmap { get; }
         public double Height => (RowCount - 1) * Edge;
         public double? MaxValue => maxValue ?? CalcAndSetValues().Max;
         public double? MinValue => minValue ?? CalcAndSetValues().Min;
@@ -106,16 +103,13 @@ namespace TwoDimensionalFields.Grids
             return (x, y);
         }
 
+        public void SetColors(Dictionary<double, Color> colors) => GridBitmap.Colors = colors;
+
         public void SetValue(int i, int j, double? value)
         {
             grid[i, j] = value;
             ValueChanged(value);
         }
-
-        /*public MapObject Search(ISearcher<MapObject> searcher)
-        {
-            return searcher.Search(this);
-        }*/
 
         private (double? Min, double? Max) CalcAndSetValues()
         {
@@ -126,11 +120,11 @@ namespace TwoDimensionalFields.Grids
             {
                 for (int j = 0; j < ColumnCount; j++)
                 {
-                    if (grid[i, j] > max)
+                    if (!max.HasValue || grid[i, j] > max)
                     {
                         max = grid[i, j];
                     }
-                    else if (grid[i, j] < min)
+                    else if (!min.HasValue || grid[i, j] < min)
                     {
                         min = grid[i, j];
                     }

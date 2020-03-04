@@ -386,9 +386,7 @@ namespace MiniGis
         private void Map_Paint(object sender, PaintEventArgs e)
         {
             var drawer = new GraphicsDrawer(e.Graphics);
-            (double x1, double y1) = ScreenToMap(new Point(0, 0));
-            (double x2, double y2) = ScreenToMap(new Point(Width, Height));
-            var bounds = new Bounds(x1, y1, x2, y2);
+            var bounds = GetBounds();
 
             drawer.SetParams(map.Center.X, map.Center.Y, map.Scale, Width, Height, bounds);
 
@@ -396,5 +394,13 @@ namespace MiniGis
         }
 
         private void Map_Resize(object sender, EventArgs e) => Invalidate();
+
+        private Bounds GetBounds()
+        {
+            (double x1, double y1) = ScreenToMap(new Point(0, 0));
+            (double x2, double y2) = ScreenToMap(new Point(Width, Height));
+
+            return new Bounds(x1, y1, x2, y2);
+        }
     }
 }

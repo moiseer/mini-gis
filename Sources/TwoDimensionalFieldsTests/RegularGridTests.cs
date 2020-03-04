@@ -5,7 +5,7 @@ using Xunit;
 
 namespace TwoDimensionalFieldsTests
 {
-    public class SquareGridTests
+    public class RegularGridTests
     {
         [Fact]
         public void GetValue_GetExistingValue_ValueEqualExpected()
@@ -18,7 +18,7 @@ namespace TwoDimensionalFieldsTests
                 { 2, 3, 2, 4 },
             };
             var position = new Node<double>(2, 9);
-            var grid = new SquareGrid(matrix, position, 2);
+            var grid = new RegularGrid(matrix, position, 2);
 
             double? zCenter = grid.GetValue(3, 6);
 
@@ -36,7 +36,7 @@ namespace TwoDimensionalFieldsTests
                 { 2, 3, 2, 4 },
             };
             var position = new Node<double>(2, 9);
-            var grid = new SquareGrid(matrix, position, 2);
+            var grid = new RegularGrid(matrix, position, 2);
 
             double? zCenter = grid.GetValue(3, 6);
 

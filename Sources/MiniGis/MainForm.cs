@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -101,9 +102,39 @@ namespace MiniGis
 
         private void InitTestGrid()
         {
-            var grid = SquareGridFactory.CreateTestGrid();
+            var colors = new Dictionary<double, Color>
+            {
+                [0] = Color.Blue,
+                [25] = Color.Cyan,
+                [50] = Color.Green,
+                [75] = Color.Yellow,
+                [100] = Color.Red
+            };
 
-            mapControl.AddLayer(grid);
+            var nodes = new[]
+            {
+                new Node3d<double>(10, 30, 1),
+                new Node3d<double>(20, 40, 2),
+                new Node3d<double>(20, 30, 3),
+                new Node3d<double>(50, 10, 4),
+                new Node3d<double>(30, 50, 5),
+            };
+
+            var grid1 = new IrregularGrid(nodes);
+            var grid2 = RegularGridFactory.Create(nodes, 2);
+            var grid3 = RegularGridFactory.CreateTestGrid();
+
+            grid1.SetColors(colors);
+            grid2.SetColors(colors);
+            grid3.SetColors(colors);
+
+            grid1.Name = "Нерегулярная матрица";
+            grid2.Name = "Расчитанная регулярная матрица";
+            grid3.Name = "Тестовая матрица";
+
+            mapControl.AddLayer(grid3);
+            mapControl.AddLayer(grid2);
+            mapControl.AddLayer(grid1);
         }
 
         private void InitTestLayers()
@@ -178,7 +209,7 @@ namespace MiniGis
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            // InitTestLayers();
+            InitTestLayers();
             InitTestGrid();
 
             layersControl.MapControl = mapControl;

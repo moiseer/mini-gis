@@ -97,7 +97,7 @@ namespace MiniGis
                 return;
             }
 
-            MapControl.MoveLayerDown(listView.SelectedItems[0].Tag as Layer);
+            MapControl.MoveLayerDown(listView.SelectedItems[0].Tag as ILayer);
             UpdateLayers();
         }
 
@@ -113,7 +113,7 @@ namespace MiniGis
                 return;
             }
 
-            MapControl.MoveLayerUp(listView.SelectedItems[0].Tag as Layer);
+            MapControl.MoveLayerUp(listView.SelectedItems[0].Tag as ILayer);
             UpdateLayers();
         }
 
