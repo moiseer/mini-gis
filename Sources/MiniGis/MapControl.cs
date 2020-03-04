@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using TwoDimensionalFields.Drawing;
+using TwoDimensionalFields.Grids;
 using TwoDimensionalFields.MapObjects;
 using TwoDimensionalFields.Maps;
 using TwoDimensionalFields.Searching;
@@ -35,6 +36,7 @@ namespace MiniGis
         public MapControl()
         {
             SelectedObjects = new List<MapObject>();
+            SelectedValues = new Dictionary<Grid, double>();
             snap = 5;
             map = new Map();
             InitializeComponent();
@@ -70,6 +72,7 @@ namespace MiniGis
 
         public List<ILayer> Layers => map.Layers;
         public List<MapObject> SelectedObjects { get; }
+        public Dictionary<Grid, double> SelectedValues { get; private set; }
         public void AddLayer(ILayer layer) => map.Layers.Add(layer);
 
         public void MoveLayerDown(ILayer layer)
@@ -205,6 +208,14 @@ namespace MiniGis
             SelectedObjects.Clear();
         }
 
+        private Bounds GetBounds()
+        {
+            (double x1, double y1) = ScreenToMap(new Point(0, 0));
+            (double x2, double y2) = ScreenToMap(new Point(Width, Height));
+
+            return new Bounds(x1, y1, x2, y2);
+        }
+
         private void InsertLayer(int index, ILayer layer) => map.Layers.Insert(index, layer);
 
         private void LoadCursors()
@@ -289,54 +300,35 @@ namespace MiniGis
             }
         }
 
-        private void Map_MouseUp(object sender, MouseEventArgs e)
+        private void Map_MouseUp(object sender, MouseEventArgs mouse)
         {
             isMouseDown = false;
             switch (ActiveTool)
             {
                 case MapToolType.Select:
-                    var dx = Math.Abs(mouseDownPosition.X - e.X);
-                    var dy = Math.Abs(mouseDownPosition.Y - e.Y);
+                    var dx = Math.Abs(mouseDownPosition.X - mouse.X);
+                    var dy = Math.Abs(mouseDownPosition.Y - mouse.Y);
 
                     if (dx > snap && dy > snap)
                     {
-                        break;
+                        return;
                     }
 
-                    Node<double> searchPoint = ScreenToMap(e.Location);
-                    var delta = snap / map.Scale;
+                    Node<double> searchPoint = ScreenToMap(mouse.Location);
 
-                    if (ModifierKeys != Keys.Control)
-                    {
-                        ClearSelection();
-                        Invalidate();
-                    }
-
-                    var result = map.Search(new MapObjectSearcher(searchPoint, delta));
-
-                    if (result == null)
-                    {
-                        break;
-                    }
-
-                    result.Selected = true;
-                    if (!SelectedObjects.Contains(result))
-                    {
-                        SelectedObjects.Add(result);
-                    }
-
-                    Invalidate();
+                    SelectMapObject(searchPoint);
+                    SelectValue(searchPoint);
                     break;
                 case MapToolType.Pan:
                     Cursor = handCur;
                     break;
                 case MapToolType.ZoomIn:
-                    var x = (mouseDownPosition.X + e.X) / 2;
-                    var y = (mouseDownPosition.Y + e.Y) / 2;
+                    var x = (mouseDownPosition.X + mouse.X) / 2;
+                    var y = (mouseDownPosition.Y + mouse.Y) / 2;
                     map.Center = ScreenToMap(new Point(x, y));
 
-                    var w = Math.Abs(mouseDownPosition.X - e.X);
-                    var h = Math.Abs(mouseDownPosition.Y - e.Y);
+                    var w = Math.Abs(mouseDownPosition.X - mouse.X);
+                    var h = Math.Abs(mouseDownPosition.Y - mouse.Y);
 
                     if (w <= snap && h <= snap)
                     {
@@ -395,12 +387,36 @@ namespace MiniGis
 
         private void Map_Resize(object sender, EventArgs e) => Invalidate();
 
-        private Bounds GetBounds()
+        private void SelectMapObject(Node<double> searchPoint)
         {
-            (double x1, double y1) = ScreenToMap(new Point(0, 0));
-            (double x2, double y2) = ScreenToMap(new Point(Width, Height));
+            var delta = snap / map.Scale;
 
-            return new Bounds(x1, y1, x2, y2);
+            if (ModifierKeys != Keys.Control)
+            {
+                ClearSelection();
+                Invalidate();
+            }
+
+            var result = new MapObjectSearcher(searchPoint, delta).Search(map);
+
+            if (result == null)
+            {
+                return;
+            }
+
+            result.Selected = true;
+            if (!SelectedObjects.Contains(result))
+            {
+                SelectedObjects.Add(result);
+            }
+
+            Invalidate();
+        }
+
+        private void SelectValue(Node<double> searchPoint)
+        {
+            var searcher = new GridValueSearcher(searchPoint) { Bounds = GetBounds() };
+            SelectedValues = searcher.Search(map);
         }
     }
 }

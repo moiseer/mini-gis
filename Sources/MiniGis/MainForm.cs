@@ -52,6 +52,11 @@ namespace MiniGis
             }
         }
 
+        private void ButtonCalcRegular_Click(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
         private void ButtonPan_Click(object sender, EventArgs e)
         {
             mapControl.ActiveTool = MapToolType.Pan;
@@ -98,6 +103,38 @@ namespace MiniGis
             ButtonPan.Checked = false;
             ButtonZoomIn.Checked = false;
             ButtonZoomOut.Checked = true;
+        }
+
+        private void DisplayGridValue()
+        {
+            toolStripStatusLabelValue.Text = string.Empty;
+
+            if (!mapControl.SelectedValues.Any())
+            {
+                return;
+            }
+
+            foreach (var gridValue in mapControl.SelectedValues)
+            {
+                toolStripStatusLabelValue.Text += $"\"{gridValue.Key.Name}\": {Math.Round(gridValue.Value, 4)}";
+            }
+        }
+
+        private void DisplayPolygonArea()
+        {
+            toolStripStatusLabelArea.Text = string.Empty;
+
+            if (mapControl.SelectedObjects.Count != 1)
+            {
+                return;
+            }
+
+            if (!(mapControl.SelectedObjects.First() is Polygon polygon))
+            {
+                return;
+            }
+
+            toolStripStatusLabelArea.Text += $"Polygon's Area = {Math.Round(polygon.Area(), 4)}";
         }
 
         private void InitTestGrid()
@@ -225,19 +262,8 @@ namespace MiniGis
 
         private void map_MouseUp(object sender, MouseEventArgs e)
         {
-            toolStripStatusLabelArea.Text = string.Empty;
-
-            if (mapControl.SelectedObjects.Count != 1)
-            {
-                return;
-            }
-
-            if (!(mapControl.SelectedObjects.First() is Polygon polygon))
-            {
-                return;
-            }
-
-            toolStripStatusLabelArea.Text += $"Polygon's Area = {Math.Round(polygon.Area(), 4)}";
+            DisplayPolygonArea();
+            DisplayGridValue();
         }
     }
 }

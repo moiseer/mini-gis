@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using TwoDimensionalFields.Drawing;
 using TwoDimensionalFields.MapObjects;
 using TwoDimensionalFields.Maps;
 
 namespace TwoDimensionalFields.Grids
 {
-    public class RegularGrid : IGrid, IDrawable, ILayer
+    public class RegularGrid : Grid
     {
         private readonly double?[,] grid;
-        private Bounds bounds;
-        private double? maxValue;
-        private double? minValue;
 
         public RegularGrid(double?[,] matrix, Node<double> position, double edge) : this()
         {
@@ -28,14 +26,10 @@ namespace TwoDimensionalFields.Grids
             GridBitmap = new RegularGridBitmap(this);
         }
 
-        public Bounds Bounds => bounds ?? (bounds = GetBounds());
         public int ColumnCount => grid.GetLength(1);
         public double Edge { get; }
         public RegularGridBitmap GridBitmap { get; }
         public double Height => (RowCount - 1) * Edge;
-        public double? MaxValue => maxValue ?? CalcAndSetValues().Max;
-        public double? MinValue => minValue ?? CalcAndSetValues().Min;
-        public string Name { get; set; }
 
         /// <summary>
         /// Xmin, Ymax
@@ -43,8 +37,6 @@ namespace TwoDimensionalFields.Grids
         public Node<double> Position { get; }
 
         public int RowCount => grid.GetLength(0);
-        public bool Selected { get; set; }
-        public bool Visible { get; set; }
         public double Width => (ColumnCount - 1) * Edge;
 
         public double? this[int i, int j] => grid[i, j];
@@ -57,14 +49,14 @@ namespace TwoDimensionalFields.Grids
             return (i, j);
         }
 
-        public void Draw(IDrawer drawer) => drawer.Draw(this);
-
-        public double? GetValue(double x, double y)
+        public override double? GetValue(double x, double y)
         {
             (double i, double j) = CoordinatesToIndexes(x, y);
 
             return GetValueByIndex(i, j);
         }
+
+        public override double? GetValue(Node<double> searchPoint) => GetValue(searchPoint.X, searchPoint.Y);
 
         public double? GetValueByIndex(double i, double j)
         {
@@ -95,15 +87,15 @@ namespace TwoDimensionalFields.Grids
             return value;
         }
 
-        public (double x, double y) IndexesToCoordinates(double i, double j)
+        public Node<double> IndexesToCoordinates(double i, double j)
         {
             double x = j * Edge + Position.X;
             double y = Position.Y - i * Edge;
 
-            return (x, y);
+            return new Node<double>(x, y);
         }
 
-        public void SetColors(Dictionary<double, Color> colors) => GridBitmap.Colors = colors;
+        public override void SetColors(Dictionary<double, Color> colors) => GridBitmap.Colors = colors;
 
         public void SetValue(int i, int j, double? value)
         {
@@ -111,33 +103,7 @@ namespace TwoDimensionalFields.Grids
             ValueChanged(value);
         }
 
-        private (double? Min, double? Max) CalcAndSetValues()
-        {
-            double? min = grid[0, 0];
-            double? max = grid[0, 0];
-
-            for (int i = 0; i < RowCount; i++)
-            {
-                for (int j = 0; j < ColumnCount; j++)
-                {
-                    if (!max.HasValue || grid[i, j] > max)
-                    {
-                        max = grid[i, j];
-                    }
-                    else if (!min.HasValue || grid[i, j] < min)
-                    {
-                        min = grid[i, j];
-                    }
-                }
-            }
-
-            minValue = min;
-            maxValue = max;
-
-            return (min, max);
-        }
-
-        private Bounds GetBounds()
+        protected override Bounds GetBounds()
         {
             return new Bounds(
                 Position.X,
@@ -147,10 +113,13 @@ namespace TwoDimensionalFields.Grids
             );
         }
 
+        protected override double? GetMaxValue() => grid.Cast<double?>().Where(value => value.HasValue).Max();
+        protected override double? GetMinValue() => grid.Cast<double?>().Where(value => value.HasValue).Min();
+
         private void ValueChanged(double? newValue)
         {
-            minValue = minValue.HasValue ? newValue < minValue ? newValue : minValue : newValue;
-            maxValue = maxValue.HasValue ? newValue > maxValue ? newValue : maxValue : newValue;
+            MinValue = MinValue.HasValue ? newValue < MinValue ? newValue : MinValue : newValue;
+            MaxValue = MaxValue.HasValue ? newValue > MaxValue ? newValue : MaxValue : newValue;
             GridBitmap.Clear();
         }
     }

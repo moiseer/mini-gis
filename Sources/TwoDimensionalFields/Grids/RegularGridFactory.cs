@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using TwoDimensionalFields.MapObjects;
+using TwoDimensionalFields.Searching;
 
 namespace TwoDimensionalFields.Grids
 {
@@ -9,7 +10,7 @@ namespace TwoDimensionalFields.Grids
     {
         public static RegularGrid Create(IEnumerable<Node3d<double>> nodes, int edge) => Create(nodes, edge, edge * 5, 2);
 
-        public static RegularGrid Create(IEnumerable<Node3d<double>> nodes, int edge, int delta, int pow)
+        public static RegularGrid Create(IEnumerable<Node3d<double>> nodes, int edge, double delta, int pow)
         {
             double xMin = nodes.Min(node => node.X);
             double xMax = nodes.Max(node => node.X);
@@ -20,10 +21,10 @@ namespace TwoDimensionalFields.Grids
             var rowCount = Convert.ToInt32(Math.Floor(yMax - yMin) / edge) + 1;
             var columnCount = Convert.ToInt32(Math.Floor(xMax - xMin) / edge) + 1;
 
-            return Create(new IrregularGrid(nodes), edge, position, rowCount, columnCount, delta, pow);
+            return Create(new IrregularGrid(nodes), edge, position, rowCount, columnCount, delta, pow, IrregularGrid.ValueCalculating.ByNodesCount);
         }
 
-        public static RegularGrid Create(IrregularGrid nodes, int edge, Node<double> position, int rowCount, int columnCount, int delta, int pow)
+        public static RegularGrid Create(IrregularGrid irregularGrid, int edge, Node<double> position, int rowCount, int columnCount, double delta, int pow, IrregularGrid.ValueCalculating calculatingType)
         {
             var grid = new double?[rowCount, columnCount];
             var squareGrid = new RegularGrid(grid, position, edge);
@@ -32,8 +33,8 @@ namespace TwoDimensionalFields.Grids
             {
                 for (int j = 0; j < columnCount; j++)
                 {
-                    (double x, double y) = squareGrid.IndexesToCoordinates(i, j);
-                    double? value = nodes.GetValue(x, y, delta, pow);
+                    var searchPoint = squareGrid.IndexesToCoordinates(i, j);
+                    double? value = GridValueSearcher.SearchIrregularGrid(irregularGrid, searchPoint, delta, pow, calculatingType);
                     squareGrid.SetValue(i, j, value);
                 }
             }

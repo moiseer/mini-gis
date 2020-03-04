@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.toolStrip = new System.Windows.Forms.ToolStrip();
             this.ButtonSelect = new System.Windows.Forms.ToolStripButton();
             this.ButtonPan = new System.Windows.Forms.ToolStripButton();
@@ -44,15 +45,24 @@
             this.mapControl = new MiniGis.MapControl();
             this.layersControl = new MiniGis.LayersControl();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.toolStripStatusLabelValue = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.ButtonCalcRegular = new System.Windows.Forms.ToolStripButton();
             this.toolStrip.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
-            this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.ButtonSelect, this.ButtonPan, this.ButtonZoomIn, this.ButtonZoomOut, this.toolStripSeparator2, this.ButtonZoomAll });
+            // 
+            // toolStrip
+            // 
+            this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.ButtonSelect, this.ButtonPan, this.ButtonZoomIn, this.ButtonZoomOut, this.toolStripSeparator2, this.ButtonZoomAll, this.toolStripSeparator1, this.ButtonCalcRegular });
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(624, 25);
+            this.toolStrip.Size = new System.Drawing.Size(728, 25);
             this.toolStrip.TabIndex = 3;
             this.toolStrip.Text = "toolStrip";
+            // 
+            // ButtonSelect
+            // 
             this.ButtonSelect.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.ButtonSelect.Image = global::MiniGis.Properties.Resources.arrow1;
             this.ButtonSelect.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -60,6 +70,9 @@
             this.ButtonSelect.Size = new System.Drawing.Size(23, 22);
             this.ButtonSelect.Text = "Select";
             this.ButtonSelect.Click += new System.EventHandler(this.ButtonSelect_Click);
+            // 
+            // ButtonPan
+            // 
             this.ButtonPan.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.ButtonPan.Image = global::MiniGis.Properties.Resources.hand1;
             this.ButtonPan.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -67,6 +80,9 @@
             this.ButtonPan.Size = new System.Drawing.Size(23, 22);
             this.ButtonPan.Text = "Pan";
             this.ButtonPan.Click += new System.EventHandler(this.ButtonPan_Click);
+            // 
+            // ButtonZoomIn
+            // 
             this.ButtonZoomIn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.ButtonZoomIn.Image = global::MiniGis.Properties.Resources.zoom_in1;
             this.ButtonZoomIn.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -74,6 +90,9 @@
             this.ButtonZoomIn.Size = new System.Drawing.Size(23, 22);
             this.ButtonZoomIn.Text = "ZoomIn";
             this.ButtonZoomIn.Click += new System.EventHandler(this.ButtonZoomIn_Click);
+            // 
+            // ButtonZoomOut
+            // 
             this.ButtonZoomOut.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.ButtonZoomOut.Image = global::MiniGis.Properties.Resources.zoom_out1;
             this.ButtonZoomOut.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -81,55 +100,113 @@
             this.ButtonZoomOut.Size = new System.Drawing.Size(23, 22);
             this.ButtonZoomOut.Text = "ZoomOut";
             this.ButtonZoomOut.Click += new System.EventHandler(this.ButtonZoomOut_Click);
+            // 
+            // toolStripSeparator2
+            // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
+            // ButtonZoomAll
+            // 
             this.ButtonZoomAll.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.ButtonZoomAll.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.ButtonZoomAll.Name = "ButtonZoomAll";
             this.ButtonZoomAll.Size = new System.Drawing.Size(57, 22);
             this.ButtonZoomAll.Text = "ZoomAll";
             this.ButtonZoomAll.Click += new System.EventHandler(this.ButtonZoomAll_Click);
+            // 
+            // toolStripSeparator
+            // 
             this.toolStripSeparator.Name = "toolStripSeparator";
             this.toolStripSeparator.Size = new System.Drawing.Size(6, 6);
-            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.toolStripStatusLabelMouse, this.toolStripStatusLabelArea });
-            this.statusStrip.Location = new System.Drawing.Point(0, 419);
+            // 
+            // statusStrip
+            // 
+            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { this.toolStripStatusLabelMouse, this.toolStripStatusLabelArea, this.toolStripStatusLabelValue });
+            this.statusStrip.Location = new System.Drawing.Point(0, 487);
             this.statusStrip.Name = "statusStrip";
-            this.statusStrip.Size = new System.Drawing.Size(624, 22);
+            this.statusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
+            this.statusStrip.Size = new System.Drawing.Size(728, 22);
             this.statusStrip.TabIndex = 4;
             this.statusStrip.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabelMouse
+            // 
             this.toolStripStatusLabelMouse.Name = "toolStripStatusLabelMouse";
             this.toolStripStatusLabelMouse.Size = new System.Drawing.Size(85, 17);
             this.toolStripStatusLabelMouse.Text = "MouseCoursor";
+            // 
+            // toolStripStatusLabelArea
+            // 
             this.toolStripStatusLabelArea.Name = "toolStripStatusLabelArea";
             this.toolStripStatusLabelArea.Size = new System.Drawing.Size(78, 17);
             this.toolStripStatusLabelArea.Text = "Polygon Area";
+            // 
+            // LabelMapCursorPosition
+            // 
             this.LabelMapCursorPosition.Name = "LabelMapCursorPosition";
             this.LabelMapCursorPosition.Size = new System.Drawing.Size(0, 17);
-            this.splitter.Location = new System.Drawing.Point(161, 25);
+            // 
+            // splitter
+            // 
+            this.splitter.Location = new System.Drawing.Point(188, 25);
             this.splitter.Name = "splitter";
-            this.splitter.Size = new System.Drawing.Size(3, 394);
+            this.splitter.Size = new System.Drawing.Size(3, 462);
             this.splitter.TabIndex = 6;
             this.splitter.TabStop = false;
+            // 
+            // mapControl
+            // 
             this.mapControl.ActiveTool = MiniGis.MapToolType.Select;
             this.mapControl.BackColor = System.Drawing.SystemColors.Window;
             this.mapControl.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.mapControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mapControl.Location = new System.Drawing.Point(164, 25);
+            this.mapControl.Location = new System.Drawing.Point(191, 25);
             this.mapControl.Name = "mapControl";
-            this.mapControl.Size = new System.Drawing.Size(460, 394);
+            this.mapControl.Size = new System.Drawing.Size(537, 462);
             this.mapControl.TabIndex = 0;
             this.mapControl.MouseMove += new System.Windows.Forms.MouseEventHandler(this.map_MouseMove);
             this.mapControl.MouseUp += new System.Windows.Forms.MouseEventHandler(this.map_MouseUp);
+            // 
+            // layersControl
+            // 
             this.layersControl.Dock = System.Windows.Forms.DockStyle.Left;
             this.layersControl.Location = new System.Drawing.Point(0, 25);
             this.layersControl.Name = "layersControl";
-            this.layersControl.Size = new System.Drawing.Size(161, 394);
+            this.layersControl.Size = new System.Drawing.Size(188, 462);
             this.layersControl.TabIndex = 5;
+            // 
+            // openFileDialog
+            // 
             this.openFileDialog.Filter = "Текстовые файлы (*.txt)|*.txt";
             this.openFileDialog.Title = "Добавить слои";
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            // 
+            // toolStripStatusLabelValue
+            // 
+            this.toolStripStatusLabelValue.Name = "toolStripStatusLabelValue";
+            this.toolStripStatusLabelValue.Size = new System.Drawing.Size(60, 17);
+            this.toolStripStatusLabelValue.Text = "Grid Value";
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+            // 
+            // ButtonCalcRegular
+            // 
+            this.ButtonCalcRegular.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.ButtonCalcRegular.Image = ((System.Drawing.Image)(resources.GetObject("ButtonCalcRegular.Image")));
+            this.ButtonCalcRegular.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.ButtonCalcRegular.Name = "ButtonCalcRegular";
+            this.ButtonCalcRegular.Size = new System.Drawing.Size(74, 22);
+            this.ButtonCalcRegular.Text = "CalcRegular";
+            this.ButtonCalcRegular.Click += new System.EventHandler(this.ButtonCalcRegular_Click);
+            // 
+            // MainForm
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(624, 441);
+            this.ClientSize = new System.Drawing.Size(728, 509);
             this.Controls.Add(this.mapControl);
             this.Controls.Add(this.splitter);
             this.Controls.Add(this.layersControl);
@@ -166,6 +243,9 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelArea;
         private MiniGis.LayersControl layersControl;
         private MiniGis.MapControl mapControl;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelValue;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripButton ButtonCalcRegular;
     }
 }
 
