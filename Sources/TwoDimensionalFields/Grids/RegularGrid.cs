@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using TwoDimensionalFields.Drawing;
+using TwoDimensionalFields.Drawing.GridGraphics;
 using TwoDimensionalFields.MapObjects;
 using TwoDimensionalFields.Maps;
 
@@ -17,18 +17,20 @@ namespace TwoDimensionalFields.Grids
             grid = matrix;
             Edge = edge;
             Position = position;
+
+            CalcAndSetParams();
         }
 
         private RegularGrid()
         {
             Visible = true;
             Name = "Regular grid";
-            GridBitmap = new RegularGridBitmap(this);
+            GridGraphics = new RegularGridGraphics(this);
         }
 
         public int ColumnCount => grid.GetLength(1);
         public double Edge { get; }
-        public RegularGridBitmap GridBitmap { get; }
+        public RegularGridGraphics GridGraphics { get; }
         public double Height => (RowCount - 1) * Edge;
 
         /// <summary>
@@ -56,11 +58,9 @@ namespace TwoDimensionalFields.Grids
             return GetValueByIndex(i, j);
         }
 
-        public override double? GetValue(Node<double> searchPoint) => GetValue(searchPoint.X, searchPoint.Y);
-
         public double? GetValueByIndex(double i, double j)
         {
-            if (i < 0 || i >= RowCount || j < 0 || j >= ColumnCount)
+            if (i < 0 || i >= RowCount - 1 || j < 0 || j >= ColumnCount - 1)
             {
                 return null;
             }
@@ -95,12 +95,12 @@ namespace TwoDimensionalFields.Grids
             return new Node<double>(x, y);
         }
 
-        public override void SetColors(Dictionary<double, Color> colors) => GridBitmap.Colors = colors;
+        public override void SetColors(Dictionary<double, Color> colors) => GridGraphics.Colors = colors;
 
         public void SetValue(int i, int j, double? value)
         {
             grid[i, j] = value;
-            ValueChanged(value);
+            ValueChanged();
         }
 
         protected override Bounds GetBounds()
@@ -116,11 +116,31 @@ namespace TwoDimensionalFields.Grids
         protected override double? GetMaxValue() => grid.Cast<double?>().Where(value => value.HasValue).Max();
         protected override double? GetMinValue() => grid.Cast<double?>().Where(value => value.HasValue).Min();
 
-        private void ValueChanged(double? newValue)
+        private void CalcAndSetParams()
         {
-            MinValue = MinValue.HasValue ? newValue < MinValue ? newValue : MinValue : newValue;
-            MaxValue = MaxValue.HasValue ? newValue > MaxValue ? newValue : MaxValue : newValue;
-            GridBitmap.Clear();
+            if (grid.Length == 0)
+            {
+                return;
+            }
+
+            var min = grid[0, 0];
+            var max = grid[0, 0];
+
+            foreach (var value in grid)
+            {
+                min = min.HasValue && min < value ? min : value;
+                max = max.HasValue && max > value ? max : value;
+            }
+
+            MinValue = min;
+            MaxValue = max;
+        }
+
+        private void ValueChanged()
+        {
+            MinValue = null;
+            MaxValue = null;
+            GridGraphics.Clear();
         }
     }
 }

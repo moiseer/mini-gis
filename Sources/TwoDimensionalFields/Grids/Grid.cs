@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using TwoDimensionalFields.Drawing;
-using TwoDimensionalFields.MapObjects;
 using TwoDimensionalFields.Maps;
 
 namespace TwoDimensionalFields.Grids
@@ -13,7 +12,11 @@ namespace TwoDimensionalFields.Grids
         private double? maxValue;
         private double? minValue;
 
-        public Bounds Bounds => bounds ?? (bounds = GetBounds());
+        public Bounds Bounds
+        {
+            get => bounds ?? (bounds = GetBounds());
+            protected set => bounds = value;
+        }
 
         public double? MaxValue
         {
@@ -33,7 +36,6 @@ namespace TwoDimensionalFields.Grids
 
         public void Draw(IDrawer drawer) => drawer.Draw(this);
         public abstract double? GetValue(double x, double y);
-        public abstract double? GetValue(Node<double> searchPoint);
         public abstract void SetColors(Dictionary<double, Color> colors);
         protected abstract Bounds GetBounds();
         protected abstract double? GetMaxValue();

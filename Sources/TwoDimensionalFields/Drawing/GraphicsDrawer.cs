@@ -44,7 +44,7 @@ namespace TwoDimensionalFields.Drawing
                 case ILayer layerObject when !layerObject.Visible:
                 case Polyline polylineObject when polylineObject.Nodes.Count < 2:
                     return;
-                case IrregularGridGraphics.ValuedPoint valuedPoint:
+                case ValuedPoint valuedPoint:
                     DrawValuedPoint(valuedPoint);
                     break;
                 case Point point:
@@ -88,7 +88,7 @@ namespace TwoDimensionalFields.Drawing
 
         private void DrawIrregularGrid(IrregularGrid grid)
         {
-            foreach (Point point in grid.GridGraphics.ColoredPoints)
+            foreach (var point in grid.GridGraphics.ColoredPoints)
             {
                 Draw(point);
             }
@@ -98,10 +98,7 @@ namespace TwoDimensionalFields.Drawing
         {
             foreach (var mapObject in layer.Objects)
             {
-                if (mapObject is IDrawable drawable)
-                {
-                    drawable.Draw(this);
-                }
+                mapObject.Draw(this);
             }
         }
 
@@ -117,12 +114,9 @@ namespace TwoDimensionalFields.Drawing
 
         private void DrawMap(IMap map)
         {
-            foreach (var layer in map.Layers)
+            foreach (var layer in map.Layers.OfType<IDrawable>())
             {
-                if (layer is IDrawable drawable)
-                {
-                    drawable.Draw(this);
-                }
+                layer.Draw(this);
             }
         }
 
@@ -160,7 +154,7 @@ namespace TwoDimensionalFields.Drawing
 
         private void DrawRegularGrid(RegularGrid grid)
         {
-            var bitmap = grid.GridBitmap.Bitmap;
+            var bitmap = grid.GridGraphics.Bitmap;
             var drawPosition = MapToScreen(grid.Position.X, grid.Position.Y);
             var size = new Size((int)(grid.Width * scale), (int)(grid.Height * scale));
             var drawArea = new Rectangle(drawPosition, size);
@@ -168,12 +162,12 @@ namespace TwoDimensionalFields.Drawing
             graphics.DrawImage(bitmap, drawArea);
         }
 
-        private void DrawValuedPoint(IrregularGridGraphics.ValuedPoint point)
+        private void DrawValuedPoint(ValuedPoint point)
         {
             var brush = GetBrush(point);
             var symbol = GetSymbol(point);
 
-            var textFont = new Font("Arial", 10);
+            var textFont = new Font("Arial", 6);
             var textBrush = new SolidBrush(Color.Black);
 
             var screenPoint = MapToScreen(point.X, point.Y);

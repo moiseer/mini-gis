@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Drawing;
 using TwoDimensionalFields.Grids;
 
-namespace TwoDimensionalFields.Drawing
+namespace TwoDimensionalFields.Drawing.GridGraphics
 {
-    public class RegularGridBitmap
+    public class RegularGridGraphics : IGridGraphics
     {
         private readonly RegularGrid grid;
         private readonly Color nullColor;
         private Bitmap bitmap;
 
-        public RegularGridBitmap(RegularGrid grid)
+        public RegularGridGraphics(RegularGrid grid)
         {
             this.grid = grid;
             nullColor = Color.FromArgb(0, 0, 0, 0);

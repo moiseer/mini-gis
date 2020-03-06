@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using TwoDimensionalFields.MapObjects;
 using TwoDimensionalFields.Searching;
@@ -8,38 +7,44 @@ namespace TwoDimensionalFields.Grids
 {
     public class RegularGridFactory
     {
-        public static RegularGrid Create(IEnumerable<Node3d<double>> nodes, int edge) => Create(nodes, edge, edge * 5, 2);
-
-        public static RegularGrid Create(IEnumerable<Node3d<double>> nodes, int edge, double delta, int pow)
+        public static RegularGrid Create(IrregularGrid irregularGrid, int edge, ValueCalculating calculatingType)
         {
-            double xMin = nodes.Min(node => node.X);
-            double xMax = nodes.Max(node => node.X);
-            double yMin = nodes.Min(node => node.Y);
-            double yMax = nodes.Max(node => node.Y);
+            double delta = GetDelta(irregularGrid, calculatingType);
+            return Create(irregularGrid, edge, delta, 2, calculatingType);
+        }
+
+        public static RegularGrid Create(IrregularGrid irregularGrid, int edge, double delta, int pow, ValueCalculating calculatingType)
+        {
+            double xMin = irregularGrid.Bounds.XMin;
+            double xMax = irregularGrid.Bounds.XMax;
+            double yMin = irregularGrid.Bounds.YMin;
+            double yMax = irregularGrid.Bounds.YMax;
 
             var position = new Node<double>(xMin, yMax);
             var rowCount = Convert.ToInt32(Math.Floor(yMax - yMin) / edge) + 1;
             var columnCount = Convert.ToInt32(Math.Floor(xMax - xMin) / edge) + 1;
 
-            return Create(new IrregularGrid(nodes), edge, position, rowCount, columnCount, delta, pow, IrregularGrid.ValueCalculating.ByNodesCount);
+            return Create(irregularGrid, edge, position, rowCount, columnCount, delta, pow, calculatingType);
         }
 
-        public static RegularGrid Create(IrregularGrid irregularGrid, int edge, Node<double> position, int rowCount, int columnCount, double delta, int pow, IrregularGrid.ValueCalculating calculatingType)
+        public static RegularGrid Create(IrregularGrid irregularGrid, int edge, Node<double> position, int rowCount, int columnCount, double delta, int pow, ValueCalculating calculatingType)
         {
             var grid = new double?[rowCount, columnCount];
             var squareGrid = new RegularGrid(grid, position, edge);
+
+            var getValueFunc = GridValueSearcher.GetSearchingFunc(irregularGrid, calculatingType);
 
             for (int i = 0; i < rowCount; i++)
             {
                 for (int j = 0; j < columnCount; j++)
                 {
                     var searchPoint = squareGrid.IndexesToCoordinates(i, j);
-                    double? value = GridValueSearcher.SearchIrregularGrid(irregularGrid, searchPoint, delta, pow, calculatingType);
+                    double? value = getValueFunc(searchPoint, delta, pow);
                     squareGrid.SetValue(i, j, value);
                 }
             }
 
-            return new RegularGrid(grid, position, edge);
+            return squareGrid;
         }
 
         public static RegularGrid CreateTestGrid()
@@ -69,6 +74,21 @@ namespace TwoDimensionalFields.Grids
             }
 
             return grid;
+        }
+
+        private static double GetDelta(IrregularGrid irregularGrid, ValueCalculating calculatingType)
+        {
+            switch (calculatingType)
+            {
+                case ValueCalculating.ByRadius:
+                    var bounds = irregularGrid.Bounds;
+                    return 0.1 * Math.Sqrt(Math.Pow(bounds.XMax - bounds.XMin, 2) + Math.Pow(bounds.YMax - bounds.YMin, 2));
+                case ValueCalculating.ByNodesCount:
+                    var count = irregularGrid.Nodes.Count();
+                    return count > 10 ? count * 0.1 : 10;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(calculatingType), calculatingType, null);
+            }
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
-namespace TwoDimensionalFields.Drawing
+namespace TwoDimensionalFields.Drawing.GridGraphics
 {
     public class GridPalette
     {
@@ -15,7 +15,7 @@ namespace TwoDimensionalFields.Drawing
 
         public GridPalette(Dictionary<double, Color> colors, double? minValue, double? maxValue)
         {
-            this.colors = colors != null && colors.Count > 1 ? colors : GetWhiteBlackColors();
+            this.colors = colors != null && colors.Count > 1 ? colors : GetDefaultColors();
 
             minColorKey = this.colors.Keys.Min();
             maxColorKey = this.colors.Keys.Max();
@@ -63,12 +63,15 @@ namespace TwoDimensionalFields.Drawing
             return Color.FromArgb(alpha, red, green, blue);
         }
 
-        private Dictionary<double, Color> GetWhiteBlackColors()
+        private Dictionary<double, Color> GetDefaultColors()
         {
             return new Dictionary<double, Color>
             {
-                [0] = Color.Black,
-                [100] = Color.White
+                [0] = Color.Blue,
+                [25] = Color.Cyan,
+                [50] = Color.Green,
+                [75] = Color.Yellow,
+                [100] = Color.Red
             };
         }
     }

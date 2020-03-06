@@ -18,14 +18,14 @@ namespace TwoDimensionalFields.Searching
 
         public Bounds Bounds { get; set; }
 
-        public static double? SearchIrregularGrid(IrregularGrid grid, Node<double> searchPoint, double delta, int pow, IrregularGrid.ValueCalculating calculatingType)
+        public static Func<Node<double>, double, int, double?> GetSearchingFunc(IrregularGrid grid, ValueCalculating calculatingType)
         {
             switch (calculatingType)
             {
-                case IrregularGrid.ValueCalculating.ByRadius:
-                    return grid.GetValueByRadius(searchPoint, delta, pow);
-                case IrregularGrid.ValueCalculating.ByNodesCount:
-                    return grid.GetValueByNodesCount(searchPoint, Convert.ToInt32(delta), pow);
+                case ValueCalculating.ByRadius:
+                    return grid.GetValueByRadius;
+                case ValueCalculating.ByNodesCount:
+                    return grid.GetValueByNodesCount;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(calculatingType), calculatingType, null);
             }

@@ -5,11 +5,10 @@ using System.Linq;
 using TwoDimensionalFields.Drawing.Styling;
 using TwoDimensionalFields.Grids;
 using TwoDimensionalFields.MapObjects;
-using Point = TwoDimensionalFields.MapObjects.Point;
 
-namespace TwoDimensionalFields.Drawing
+namespace TwoDimensionalFields.Drawing.GridGraphics
 {
-    public class IrregularGridGraphics
+    public class IrregularGridGraphics : IGridGraphics
     {
         private readonly IrregularGrid grid;
         private IEnumerable<ValuedPoint> coloredPoints;
@@ -34,19 +33,13 @@ namespace TwoDimensionalFields.Drawing
             {
                 Style = new Style
                 {
-                    Brush = new SolidBrush(palette.GetColor(node.Z))
+                    Brush = new SolidBrush(palette.GetColor(node.Z)),
+                    Symbol = new Symbol
+                    {
+                        Font = new Font("Webdings", 7)
+                    }
                 }
             });
-        }
-
-        public class ValuedPoint : Point
-        {
-            public ValuedPoint(Node3d<double> position) : base(position)
-            {
-                Value = position.Z;
-            }
-
-            public double Value { get; set; }
         }
     }
 }

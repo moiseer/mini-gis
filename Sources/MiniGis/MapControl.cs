@@ -49,8 +49,7 @@ namespace MiniGis
             get => activeTool;
             set
             {
-                activeTool = value;
-                switch (activeTool)
+                switch (activeTool = value)
                 {
                     case MapToolType.Select:
                         Cursor = Cursors.Arrow;
@@ -138,7 +137,7 @@ namespace MiniGis
 
             map.Center = new Node<double>((bounds.XMin + bounds.XMax) / 2, (bounds.YMin + bounds.YMax) / 2);
 
-            if (w > snap && h > snap)
+            if (w > 0 && h > 0)
             {
                 map.Scale *= Math.Min(Width / w, Height / h);
             }

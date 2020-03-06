@@ -14,7 +14,7 @@ namespace TwoDimensionalFields.Parsers
 {
     public class MifParser
     {
-        public MifParser(string layerFilename)
+        public MifParser()
         {
             Version = 300;
             Charset = string.Empty;
@@ -24,41 +24,6 @@ namespace TwoDimensionalFields.Parsers
             Transform = new List<int>();
             ColumnsN = 0;
             Data = new List<MapObject>();
-            using (var sr = new StreamReader(layerFilename))
-            {
-                while (!sr.EndOfStream)
-                {
-                    var tmp = sr.ReadLine()?.Trim();
-                    string[] line = tmp?.Split(' ');
-                    switch (line?[0])
-                    {
-                        case "Version":
-                            SetVersion(tmp);
-                            break;
-                        case "Charset":
-                            SetCharset(tmp);
-                            break;
-                        case "Delimiter":
-                            SetDelimiter(tmp);
-                            break;
-                        case "Unique":
-                            SetUnique(tmp);
-                            break;
-                        case "Index":
-                            SetIndex(tmp);
-                            break;
-                        case "Transform":
-                            SetTransform(tmp);
-                            break;
-                        case "Columns":
-                            SetColumns(sr, tmp);
-                            break;
-                        case "Data":
-                            SetData(sr);
-                            break;
-                    }
-                }
-            }
         }
 
         public string Charset { get; set; }
@@ -70,6 +35,55 @@ namespace TwoDimensionalFields.Parsers
         public List<int> Transform { get; set; }
         public List<int> Unique { get; set; }
         public int Version { get; set; }
+
+        public Layer ParseLayerFromFile(string filePath)
+        {
+            using (var stream = new StreamReader(filePath))
+            {
+                while (!stream.EndOfStream)
+                {
+                    var line = stream.ReadLine()?.Trim();
+                    string[] worlds = line?.Split(' ');
+                    switch (worlds?[0])
+                    {
+                        case "Version":
+                            SetVersion(line);
+                            break;
+                        case "Charset":
+                            SetCharset(line);
+                            break;
+                        case "Delimiter":
+                            SetDelimiter(line);
+                            break;
+                        case "Unique":
+                            SetUnique(line);
+                            break;
+                        case "Index":
+                            SetIndex(line);
+                            break;
+                        case "Transform":
+                            SetTransform(line);
+                            break;
+                        case "Columns":
+                            SetColumns(stream, line);
+                            break;
+                        case "Data":
+                            SetData(stream);
+                            break;
+                    }
+                }
+            }
+
+            var layerName = Path.GetFileNameWithoutExtension(filePath);
+            var layer = new Layer(layerName);
+
+            foreach (var mapObject in Data)
+            {
+                layer.Add(mapObject);
+            }
+
+            return layer;
+        }
 
         private static Color IntToColor(int dec)
         {
@@ -317,7 +331,7 @@ namespace TwoDimensionalFields.Parsers
                 }
             }
 
-            // Добавление полигонов в основной список и задание стилей 
+            // Добавление полигонов в основной список и задание стилей
             foreach (var polygon in polygonsList)
             {
                 if (hasOwnStyle)

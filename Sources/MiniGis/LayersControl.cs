@@ -22,8 +22,8 @@ namespace MiniGis
         public IEnumerable<ILayer> GetSelectedLayers()
         {
             return listView.SelectedItems.Cast<ListViewItem>()
-                .Select(item=> item.Tag as ILayer)
-                .Where(layer => layer != null);
+                .Select(item=> item.Tag)
+                .OfType<ILayer>();
         }
 
         public void UpdateLayers()
@@ -45,9 +45,9 @@ namespace MiniGis
 
             foreach (ListViewItem listViewItem in listView.Items)
             {
-                if (listViewItem.Tag is ILayer tmpLayer)
+                if (listViewItem.Tag is ILayer layer)
                 {
-                    tmpLayer.Visible = listViewItem.Checked;
+                    layer.Visible = listViewItem.Checked;
                 }
             }
 
@@ -129,14 +129,12 @@ namespace MiniGis
                 return;
             }
 
-            foreach (ListViewItem item in listView.SelectedItems)
+            foreach (var layer in listView.SelectedItems.Cast<ListViewItem>().Select(item => item.Tag).OfType<ILayer>())
             {
-                if (item.Tag is ILayer layer)
-                {
-                    MapControl.RemoveLayer(layer);
-                }
+                MapControl.RemoveLayer(layer);
             }
 
+            MapControl.Invalidate();
             UpdateLayers();
         }
     }
