@@ -41,7 +41,6 @@ namespace MiniGis
             map = new Map();
             InitializeComponent();
             MouseWheel += Map_MouseWheel;
-            LoadCursors();
         }
 
         public MapToolType ActiveTool
@@ -55,13 +54,13 @@ namespace MiniGis
                         Cursor = Cursors.Arrow;
                         break;
                     case MapToolType.Pan:
-                        Cursor = handCur;
+                        Cursor = HandCur;
                         break;
                     case MapToolType.ZoomIn:
-                        Cursor = zoomInCur;
+                        Cursor = ZoomInCur;
                         break;
                     case MapToolType.ZoomOut:
-                        Cursor = zoomOutCur;
+                        Cursor = ZoomOutCur;
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -72,6 +71,11 @@ namespace MiniGis
         public List<ILayer> Layers => map.Layers;
         public List<MapObject> SelectedObjects { get; }
         public Dictionary<Grid, double> SelectedValues { get; private set; }
+        private Cursor HandCur => handCur ?? (handCur = LoadCustomCursor(HandCurPath));
+        private Cursor MoveCur => moveCur ?? (moveCur = LoadCustomCursor(MoveCurPath));
+        private Cursor ZoomInCur => zoomInCur ?? (zoomInCur = LoadCustomCursor(ZoomInCurPath));
+        private Cursor ZoomOutCur => zoomOutCur ?? (zoomOutCur = LoadCustomCursor(ZoomOutCurPath));
+
         public void AddLayer(ILayer layer) => map.Layers.Add(layer);
 
         public void MoveLayerDown(ILayer layer)
@@ -217,14 +221,6 @@ namespace MiniGis
 
         private void InsertLayer(int index, ILayer layer) => map.Layers.Insert(index, layer);
 
-        private void LoadCursors()
-        {
-            handCur = LoadCustomCursor(HandCurPath);
-            moveCur = LoadCustomCursor(MoveCurPath);
-            zoomInCur = LoadCustomCursor(ZoomInCurPath);
-            zoomOutCur = LoadCustomCursor(ZoomOutCurPath);
-        }
-
         private void Map_MouseDown(object sender, MouseEventArgs e)
         {
             isMouseDown = true;
@@ -235,7 +231,7 @@ namespace MiniGis
                 case MapToolType.Select:
                     break;
                 case MapToolType.Pan:
-                    Cursor = moveCur;
+                    Cursor = MoveCur;
                     break;
                 case MapToolType.ZoomIn:
                     break;
@@ -319,7 +315,7 @@ namespace MiniGis
                     SelectValue(searchPoint);
                     break;
                 case MapToolType.Pan:
-                    Cursor = handCur;
+                    Cursor = HandCur;
                     break;
                 case MapToolType.ZoomIn:
                     var x = (mouseDownPosition.X + mouse.X) / 2;

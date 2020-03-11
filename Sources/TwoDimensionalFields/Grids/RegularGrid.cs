@@ -12,10 +12,10 @@ namespace TwoDimensionalFields.Grids
     {
         private readonly double?[,] grid;
 
-        public RegularGrid(double?[,] matrix, Node<double> position, double edge) : this()
+        public RegularGrid(double?[,] matrix, Node<double> position, double step) : this()
         {
             grid = matrix;
-            Edge = edge;
+            Step = step;
             Position = position;
 
             CalcAndSetParams();
@@ -29,9 +29,8 @@ namespace TwoDimensionalFields.Grids
         }
 
         public int ColumnCount => grid.GetLength(1);
-        public double Edge { get; }
         public RegularGridGraphics GridGraphics { get; }
-        public double Height => (RowCount - 1) * Edge;
+        public double Height => (RowCount - 1) * Step;
 
         /// <summary>
         /// Xmin, Ymax
@@ -39,14 +38,15 @@ namespace TwoDimensionalFields.Grids
         public Node<double> Position { get; }
 
         public int RowCount => grid.GetLength(0);
-        public double Width => (ColumnCount - 1) * Edge;
+        public double Step { get; }
+        public double Width => (ColumnCount - 1) * Step;
 
         public double? this[int i, int j] => grid[i, j];
 
         public (double i, double j) CoordinatesToIndexes(double x, double y)
         {
-            double i = (Position.Y - y) / Edge;
-            double j = (x - Position.X) / Edge;
+            double i = (Position.Y - y) / Step;
+            double j = (x - Position.X) / Step;
 
             return (i, j);
         }
@@ -89,8 +89,8 @@ namespace TwoDimensionalFields.Grids
 
         public Node<double> IndexesToCoordinates(double i, double j)
         {
-            double x = j * Edge + Position.X;
-            double y = Position.Y - i * Edge;
+            double x = j * Step + Position.X;
+            double y = Position.Y - i * Step;
 
             return new Node<double>(x, y);
         }

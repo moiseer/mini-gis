@@ -29,9 +29,9 @@
          private void InitializeComponent()
          {
              this.SuspendLayout();
-             //
+             // 
              // MapControl
-             //
+             // 
              this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
              this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
              this.DoubleBuffered = true;

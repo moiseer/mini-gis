@@ -37,6 +37,7 @@ namespace TwoDimensionalFields.Grids
         public void Draw(IDrawer drawer) => drawer.Draw(this);
         public abstract double? GetValue(double x, double y);
         public abstract void SetColors(Dictionary<double, Color> colors);
+        public override string ToString() => Name;
         protected abstract Bounds GetBounds();
         protected abstract double? GetMaxValue();
         protected abstract double? GetMinValue();

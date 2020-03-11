@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using TwoDimensionalFields.Grids;
 using TwoDimensionalFields.MapObjects;
 using TwoDimensionalFields.Parsers;
 
@@ -16,13 +17,12 @@ namespace MiniGis
             toolStripStatusLabelMouse.Text = string.Empty;
             toolStripStatusLabelArea.Text = string.Empty;
             toolStripStatusLabelValue.Text = string.Empty;
+            openFileDialog.Filter = "CSV files (*.csv)|*.csv|MIF files (*.mif)|*.mif";
+            openFileDialog.Multiselect = true;
         }
 
         private void AddLayersFromFiles(object sender, EventArgs e)
         {
-            openFileDialog.Filter = "CSV files (*.csv)|*.csv|MIF files (*.mif)|*.mif";
-            openFileDialog.Multiselect = true;
-
             if (openFileDialog.ShowDialog() != DialogResult.OK)
             {
                 return;
@@ -56,26 +56,25 @@ namespace MiniGis
 
         private void ButtonCalcRegular_Click(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            var irregularGrids = mapControl.Layers.OfType<IrregularGrid>();
+            if (!irregularGrids.Any())
+            {
+                MessageBox.Show("Cannot find any irregular grids.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var selectedIrregularGrid = layersControl.GetSelectedLayers().OfType<IrregularGrid>().FirstOrDefault();
+            var createRegularGridDialog = new CreateRegularGridForm(irregularGrids, selectedIrregularGrid);
+
+            if (createRegularGridDialog.ShowDialog() == DialogResult.OK)
+            {
+                mapControl.AddLayer(createRegularGridDialog.RegularGrid);
+                layersControl.UpdateLayers();
+            }
         }
 
-        private void ButtonPan_Click(object sender, EventArgs e)
-        {
-            mapControl.ActiveTool = MapToolType.Pan;
-            ButtonSelect.Checked = false;
-            ButtonPan.Checked = true;
-            ButtonZoomIn.Checked = false;
-            ButtonZoomOut.Checked = false;
-        }
-
-        private void ButtonSelect_Click(object sender, EventArgs e)
-        {
-            mapControl.ActiveTool = MapToolType.Select;
-            ButtonSelect.Checked = true;
-            ButtonPan.Checked = false;
-            ButtonZoomIn.Checked = false;
-            ButtonZoomOut.Checked = false;
-        }
+        private void ButtonPan_Click(object sender, EventArgs e) => SetActiveTool(MapToolType.Pan);
+        private void ButtonSelect_Click(object sender, EventArgs e) => SetActiveTool(MapToolType.Select);
 
         private void ButtonZoomAll_Click(object sender, EventArgs e)
         {
@@ -89,23 +88,8 @@ namespace MiniGis
             }
         }
 
-        private void ButtonZoomIn_Click(object sender, EventArgs e)
-        {
-            mapControl.ActiveTool = MapToolType.ZoomIn;
-            ButtonSelect.Checked = false;
-            ButtonPan.Checked = false;
-            ButtonZoomIn.Checked = true;
-            ButtonZoomOut.Checked = false;
-        }
-
-        private void ButtonZoomOut_Click(object sender, EventArgs e)
-        {
-            mapControl.ActiveTool = MapToolType.ZoomOut;
-            ButtonSelect.Checked = false;
-            ButtonPan.Checked = false;
-            ButtonZoomIn.Checked = false;
-            ButtonZoomOut.Checked = true;
-        }
+        private void ButtonZoomIn_Click(object sender, EventArgs e) => SetActiveTool(MapToolType.ZoomIn);
+        private void ButtonZoomOut_Click(object sender, EventArgs e) => SetActiveTool(MapToolType.ZoomOut);
 
         private void DisplayGridValue()
         {
@@ -147,8 +131,8 @@ namespace MiniGis
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            // mapControl.Layers.AddRange(TestHelper.CreateTestGrids());
-            // mapControl.Layers.AddRange(TestHelper.CreateTestLayers());
+            mapControl.Layers.AddRange(TestHelper.CreateTestGrids());
+            mapControl.Layers.AddRange(TestHelper.CreateTestLayers());
 
             layersControl.MapControl = mapControl;
             layersControl.AddLayer += AddLayersFromFiles;
@@ -161,6 +145,15 @@ namespace MiniGis
         {
             DisplayPolygonArea();
             DisplayGridValue();
+        }
+
+        private void SetActiveTool(MapToolType mapToolType)
+        {
+            mapControl.ActiveTool = mapToolType;
+            ButtonSelect.Checked = mapToolType == MapToolType.Select;
+            ButtonPan.Checked = mapToolType == MapToolType.Pan;
+            ButtonZoomIn.Checked = mapToolType == MapToolType.ZoomIn;
+            ButtonZoomOut.Checked = mapToolType == MapToolType.ZoomOut;
         }
     }
 }
