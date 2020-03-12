@@ -23,7 +23,7 @@ namespace TwoDimensionalFields.Grids
             return Create(irregularGrid, step, position, rowCount, columnCount, delta, pow, calculatingType, token);
         }
 
-        public static RegularGrid Create(IrregularGrid irregularGrid, double step, Node<double> position, int rowCount, int columnCount, double delta, int pow, ValueCalculating calculatingType, CancellationToken token = default)
+        public static RegularGrid Create(IrregularGrid irregularGrid, double step, Node<double> position, int rowCount, int columnCount, double delta, int pow, ValueCalculating calculatingType, CancellationToken token = default, Progress progress = null)
         {
             var grid = new double?[rowCount, columnCount];
             var squareGrid = new RegularGrid(grid, position, step);
@@ -38,6 +38,7 @@ namespace TwoDimensionalFields.Grids
                     double? value = getValueFunc(searchPoint, delta, pow);
                     squareGrid.SetValue(i, j, value);
                 }
+                progress?.SetValue(i);
             }
 
             return squareGrid;

@@ -36,22 +36,23 @@ namespace MiniGis
             this.CalcTimer = new System.Windows.Forms.Timer(this.components);
             this.CancelCalcButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
-            // 
+            //
             // CalcProgressBar
-            // 
+            //
             this.CalcProgressBar.Location = new System.Drawing.Point(3, 1);
             this.CalcProgressBar.Name = "CalcProgressBar";
             this.CalcProgressBar.Size = new System.Drawing.Size(238, 23);
+            this.CalcProgressBar.Step = 1;
             this.CalcProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.CalcProgressBar.TabIndex = 0;
-            // 
+            //
             // CalcTimer
-            // 
+            //
             this.CalcTimer.Interval = 1000;
             this.CalcTimer.Tick += new System.EventHandler(this.CalcTimer_Tick);
-            // 
+            //
             // CancelCalcButton
-            // 
+            //
             this.CancelCalcButton.Location = new System.Drawing.Point(247, 1);
             this.CancelCalcButton.Name = "CancelCalcButton";
             this.CancelCalcButton.Size = new System.Drawing.Size(75, 23);
@@ -59,9 +60,9 @@ namespace MiniGis
             this.CancelCalcButton.Text = "Cancel";
             this.CancelCalcButton.UseVisualStyleBackColor = true;
             this.CancelCalcButton.Click += new System.EventHandler(this.CancelCalcButton_Click);
-            // 
+            //
             // CreateRegularGridProgressForm
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(325, 27);

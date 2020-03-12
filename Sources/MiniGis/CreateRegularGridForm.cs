@@ -73,11 +73,12 @@ namespace MiniGis
             var cancellationTokenSource = new CancellationTokenSource();
             var token = cancellationTokenSource.Token;
 
-            var progress = new CreateRegularGridProgressForm(cancellationTokenSource);
+            var progressHelper = new Progress(rowCount);
+            var progress = new CreateRegularGridProgressForm(cancellationTokenSource, progressHelper);
             progress.Show();
             Enabled = false;
 
-            RegularGrid = await Task.Run(() => RegularGridFactory.Create(irregularGrid, step, position, rowCount, columnCount, delta, pow, calcType, token), token);
+            RegularGrid = await Task.Run(() => RegularGridFactory.Create(irregularGrid, step, position, rowCount, columnCount, delta, pow, calcType, token, progressHelper), token);
             RegularGrid.Name = name;
 
             progress.Close();
