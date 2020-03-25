@@ -9,6 +9,7 @@ namespace MiniGis
     {
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly DateTimeOffset start;
+
         public CreateRegularGridProgressForm(CancellationTokenSource cancellationTokenSource, Progress helper = null)
         {
             this.cancellationTokenSource = cancellationTokenSource;
@@ -32,7 +33,7 @@ namespace MiniGis
 
         private void SetProgress(int progress)
         {
-            if(!InvokeRequired)
+            if (!InvokeRequired)
             {
                 CalcProgressBar.Value = progress;
             }
